@@ -1,20 +1,6 @@
 import { useState } from "react";
 
-export default function AppointmentScheduling() {
-  const [formData, setFormData] = useState({
-    appointmentLocation: "",
-    appointmentDate: "",
-    appointmentTime: "",
-    flexibleTiming: false,
-  });
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
+export default function AppointmentScheduling({ formData, handleChange }) {
 
   return (
     <div className="form-grid">

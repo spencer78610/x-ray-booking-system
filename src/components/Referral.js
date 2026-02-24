@@ -1,21 +1,6 @@
 import { useState } from "react";
 
-export default function Referral() {
-  const [formData, setFormData] = useState({
-    referral: "",
-    physician: "",
-    clinic: "",
-    referralFile: null,
-  });
-
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: files ? files[0] : value,
-    }));
-  };
+export default function Referral({ formData, handleChange }) {
 
   return (
     <div className="form-grid">

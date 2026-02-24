@@ -1,20 +1,6 @@
 import { useState } from "react";
 
-export default function Consent() {
-  const [formData, setFormData] = useState({
-    consent: false,
-    confirmInformation: false,
-    privacyPolicy: false,
-    cancelationPolicy: false,
-  });
-
-  const handleChange = (e) => {
-    const { name, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: checked,
-    }));
-  };
+export default function Consent({ formData, handleChange }) {
 
   return (
     <div className="form-grid">

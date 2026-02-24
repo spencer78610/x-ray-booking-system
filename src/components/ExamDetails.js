@@ -1,19 +1,7 @@
 import React from "react";
 import { useState } from 'react'
 
-export default function ExamDetails() {
-  const [formData, setFormData] = useState({
-    examType: '',
-    specificExam: '',
-    bodyPart: '',
-    side: '',
-    notes: ''
-  })
-
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
+export default function ExamDetails({ formData, handleChange}) {
 
   return (
     <div className="form-grid">
