@@ -1,20 +1,6 @@
 import { useState } from 'react'
 
-function PatientInfo() {
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    dob: '',
-    biologicalSex: '',
-    phoneNumber: '',
-    email: '',
-    address: ''
-  })
-
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
+export default function PatientInfo({ formData, handleChange }) {
 
   return (
     <div className="form-grid">
@@ -120,4 +106,3 @@ function PatientInfo() {
   )
 }
 
-export default PatientInfo
