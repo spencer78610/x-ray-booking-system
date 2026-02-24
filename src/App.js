@@ -1,128 +1,52 @@
 import { useState } from 'react'
+import PatientInfo from './components/PatientInfo'
+import ExamDetails from './components/ExamDetails'
+import Referral from './components/Referral'
+import AppointmentScheduling from './components/AppointmentScheduling'
+import Consent from './components/Consent'
 import './App.css'
 
 function App() {
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    dob: '',
-    biologicalSex: ''
-  })
-
-  const handleChange = (event) => {
-    const { name, value } = event.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value
-    }))
-  }
-
-  const handleFormSubmission = (event) => {
-    event.preventDefault()
-    console.log(formData)
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    // collect + send all data here later
   }
 
   return (
-    <form onSubmit={handleFormSubmission}>
-      <label>
-        First Name:
-        <input
-          type="text"
-          name="firstName"
-          value={formData.firstName}
-          onChange={handleChange}
-        />
-      </label>
+    <div className="app-container">
+      <h1>Diagnostic Imaging Booking</h1>
 
-      <label>
-        Last Name:
-        <input
-          type="text"
-          name="lastName"
-          value={formData.lastName}
-          onChange={handleChange}
-        />
-      </label>
+      <form onSubmit={handleSubmit} className="booking-form">
+        <section className="form-section">
+          <h2>Patient Information</h2>
+          <PatientInfo />
+        </section>
 
-      <label>
-        Date of Birth:
-        <input
-          type="date"
-          name="dob"
-          value={formData.dob}
-          onChange={handleChange}
-        />
-      </label>
+        <section className="form-section">
+          <h2>Exam Details</h2>
+          <ExamDetails />
+        </section>
 
-      <fieldset>
-        <legend>Biological Sex:</legend>
+        <section className="form-section">
+          <h2>Referral Information</h2>
+          <Referral />
+        </section>
 
-        <label>
-          <input
-            type="radio"
-            name="biologicalSex"
-            value="male"
-            checked={formData.biologicalSex === 'male'}
-            onChange={handleChange}
-          />
-          Male
-        </label>
+        <section className="form-section">
+          <h2>Appointment Scheduling</h2>
+          <AppointmentScheduling />
+        </section>
 
-        <label>
-          <input
-            type="radio"
-            name="biologicalSex"
-            value="female"
-            checked={formData.biologicalSex === 'female'}
-            onChange={handleChange}
-          />
-          Female
-        </label>
+        <section className="form-section">
+          <h2>Consent</h2>
+          <Consent />
+        </section>
 
-        <label>
-          <input
-            type="radio"
-            name="biologicalSex"
-            value="prefer_not_to_say"
-            checked={formData.biologicalSex === 'prefer_not_to_say'}
-            onChange={handleChange}
-          />
-          Prefer not to say
-        </label>
-      </fieldset>
-
-      <label>
-        Phone Number:
-        <input
-          type="tel"
-          name="phoneNumber"
-          value={formData.phoneNumber || ''}
-          onChange={handleChange}
-        />
-      </label>
-
-      <label>
-        Email:
-        <input
-          type="email"
-          name="email"
-          value={formData.email || ''}
-          onChange={handleChange}
-        />
-      </label>
-
-      <label>
-        Address:
-        <input
-          type="text"
-          name="address"
-          value={formData.address || ''}
-          onChange={handleChange}
-        />
-      </label>
-
-      <button type="submit">Submit</button>
-    </form>
+        <button type="submit" className="submit-btn">
+          Book Appointment
+        </button>
+      </form>
+    </div>
   )
 }
 
