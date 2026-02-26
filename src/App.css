@@ -12,6 +12,7 @@ body {
 .booking-form {
   background: white;
   padding: 32px;
+  border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.08);
 }
 
@@ -21,7 +22,7 @@ body {
 
 .form-section h2 {
   margin-bottom: 16px;
-  border-bottom: 2px solid #000000;
+  border-bottom: 2px solid #eee;
   padding-bottom: 8px;
 }
 
@@ -45,6 +46,7 @@ body {
 .form-group select,
 .form-group textarea {
   padding: 10px;
+  border-radius: 6px;
   border: 1px solid #ccc;
 }
 
@@ -62,6 +64,7 @@ body {
   font-size: 1rem;
   font-weight: bold;
   border: none;
+  border-radius: 8px;
   background: #2563eb;
   color: white;
   cursor: pointer;
@@ -99,25 +102,3 @@ body {
   background: #1e4ed8;
 }
 
-.confirmation-box {
-  background: #f8fafc;
-  border: 1px solid #e5e7eb;
-  padding: 20px;
-  border-radius: 8px;
-  margin: 20px 0;
-}
-
-.confirmation-actions {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.secondary-btn {
-  padding: 14px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  background: white;
-  font-weight: 600;
-  cursor: pointer;
-}
