@@ -1,4 +1,3 @@
-import { useState } from "react";
 
 export default function Consent({ formData, handleChange }) {
 
@@ -37,7 +36,7 @@ export default function Consent({ formData, handleChange }) {
             checked={formData.privacyPolicy}
             onChange={handleChange}
           />
-          I agree to the <a href="#">privacy policy</a>.
+          I agree to the <button type="button" className="link-button">privacy policy</button>.
         </label>
       </div>
 
