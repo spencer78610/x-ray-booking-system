@@ -17,8 +17,7 @@ body {
 .booking-form {
   background: white;
   padding: 32px;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
 .form-section {
@@ -51,7 +50,6 @@ body {
 .form-group select,
 .form-group textarea {
   padding: 10px;
-  border-radius: 6px;
   border: 1px solid #ccc;
 }
 
@@ -63,17 +61,6 @@ body {
   grid-column: span 2;
 }
 
-.submit-btn {
-  width: 100%;
-  padding: 14px;
-  font-size: 1rem;
-  font-weight: bold;
-  border: none;
-  border-radius: 8px;
-  background: #2563eb;
-  color: white;
-  cursor: pointer;
-}
 
 .radio-group {
   display: flex;
@@ -103,8 +90,91 @@ body {
   font-weight: 500;
 }
 
+/* =============== */
+/* Buttons */
+/* =============== */
+
+.step-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+}
+
+.submit-btn {
+  width: 25%;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  background: #3a87ad;
+  color: white;
+  cursor: pointer;
+}
+
+.secondary-btn {
+  width: 25%;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  background: #eb3525;
+  color: white;
+  cursor: pointer;
+}
+
 .submit-btn:hover {
-  background: #1e4ed8;
+  background: #005885;
+}
+
+.secondary-btn:hover {
+  background: #c53030;
+}
+
+/* Cancel or reshedule button */
+.cR-btn {
+  width: 25%;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  background: #3a87ad;
+  color: white;
+  cursor: pointer;
+  margin-top: 30px;
+}
+
+.cR-btn :hover {
+  background: #005885;
+}
+
+.cancel-btn {
+  width: 25%;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  background: #eb3525;
+  color: white;
+  cursor: pointer;
+}
+
+.reschedule-btn {
+  width: 25%;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  background: #3a87ad;
+  color: white;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background: #c53030;
+}
+
+.reschedule-btn:hover {
+  background: #005885;
 }
 
 /* =============== */
@@ -123,8 +193,8 @@ body {
 .progress-bar {
   height: 100%;
   background-color: #4caf50;
-  width: 0%; 
-  transition: width 0.5s ease-in-out; 
+  width: 0%;
+  transition: width 0.5s ease-in-out;
   border-radius: 5px;
 }
 

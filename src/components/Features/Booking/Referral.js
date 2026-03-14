@@ -2,7 +2,7 @@
 export default function Referral({ formData, handleChange }) {
 
   return (
-    <div className="form-grid">
+    <div className="form-grid booking-form">
       {/* Referral yes/no */}
       <div className="form-group full-width">
         <label>Do you have a referral?</label>

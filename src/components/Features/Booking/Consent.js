@@ -2,7 +2,7 @@
 export default function Consent({ formData, handleChange }) {
 
   return (
-    <div className="form-grid">
+    <div className="form-grid booking-form">
       <div className="form-group full-width">
         <label className="checkbox-label">
           <input

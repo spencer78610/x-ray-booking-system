@@ -2,7 +2,7 @@ import React from 'react';
 
 function Confirmation({ formData }) {
   return (
-    <div className="confirmation-container">
+    <div className="confirmation-container booking-form">
       <h2>Appointment Confirmation</h2>
       <p>Thank you, <strong>{formData.firstName} {formData.lastName}</strong>! Your appointment has been booked.</p>
 
