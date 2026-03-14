@@ -38,7 +38,7 @@ function CancelReschedule({ formData, onReschedule, onCancel }) {
   }
 
   return (
-    <div className="cancel-reschedule-container">
+    <div className="cancel-reschedule-container booking-form">
       <h2>Cancel or Reschedule Appointment</h2>
       <p>Current appointment: <strong>{formData.appointmentDate}</strong> at <strong>{formData.appointmentTime}</strong></p>
 
@@ -49,11 +49,9 @@ function CancelReschedule({ formData, onReschedule, onCancel }) {
       <label>New Time:
         <input type="time" value={newTime} onChange={(e) => setNewTime(e.target.value)} />
       </label>
-      <button onClick={handleReschedule}>Reschedule Appointment</button>
 
       <h3>Cancel</h3>
       <p>If you wish to cancel your appointment, click below.</p>
-      <button onClick={handleCancel} className="cancel-btn">Cancel Appointment</button>
     </div>
   );
 }

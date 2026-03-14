@@ -3,7 +3,7 @@
 export default function ExamDetails({ formData, handleChange}) {
 
   return (
-    <div className="form-grid">
+    <div className="form-grid booking-form">
       <div className="form-group">
         <label>Exam Type</label>
         <select name="examType" value={formData.examType} onChange={handleChange}>

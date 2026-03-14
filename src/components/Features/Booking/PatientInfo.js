@@ -2,7 +2,7 @@
 export default function PatientInfo({ formData, handleChange }) {
 
   return (
-    <div className="form-grid">
+    <div className="form-grid booking-form">
       <div className="form-group">
         <label>First Name</label>
         <input
