@@ -1,37 +1,43 @@
-// src/pages/ProfilePage.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { auth, db } from "../firebase";
+import { auth, db } from "../../firebase";
 import { signOut } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./ProfilePage.css";
 
+const dummyProfile = {
+  fullName: "Hadeel Ahmed",
+  email: "hadeel@london-xray.co.uk",
+  phone: "+44 7700 900123",
+  dob: "1995-03-12",
+  gender: "Female",
+  address: "14 Baker St, London",
+};
+
+const dummyAppointments = [
+  { id: 1, date: "2026-03-20", time: "10:00 AM", type: "Chest X-Ray", doctor: "Dr. Smith", status: "Confirmed" },
+  { id: 2, date: "2026-03-28", time: "2:30 PM", type: "Follow-up", doctor: "Dr. Patel", status: "Pending" },
+];
+
 const ProfilePage = () => {
   const navigate = useNavigate();
   const user = auth.currentUser;
 
-  const [profile, setProfile] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    dob: "",
-    gender: "",
-    address: "",
-  });
-
-  const [appointments, setAppointments] = useState([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({ ...profile });
+  const [profile, setProfile] = useState(dummyProfile);
+  const [formData, setFormData] = useState(dummyProfile);
+  const [appointments, setAppointments] = useState(dummyAppointments);
+  const [activeTab, setActiveTab] = useState("info");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
-  const [activeTab, setActiveTab] = useState("info");
 
-  // Fetch patient profile from Firestore
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       try {
         const docRef = doc(db, "patients", user.uid);
         const docSnap = await getDoc(docRef);
@@ -40,52 +46,34 @@ const ProfilePage = () => {
           setProfile(data);
           setFormData(data);
         } else {
-          // Pre-fill email from Firebase Auth
-          const defaults = { ...profile, email: user.email || "" };
+          const defaults = { ...dummyProfile, email: user.email || "" };
           setProfile(defaults);
           setFormData(defaults);
         }
-
-        // TODO: Replace with your appointments collection/query
-        setAppointments([
-          {
-            id: 1,
-            date: "2026-03-20",
-            time: "10:00 AM",
-            type: "Chest X-Ray",
-            doctor: "Dr. Smith",
-            status: "Confirmed",
-          },
-          {
-            id: 2,
-            date: "2026-03-28",
-            time: "2:30 PM",
-            type: "Follow-up",
-            doctor: "Dr. Patel",
-            status: "Pending",
-          },
-        ]);
+        setAppointments(dummyAppointments);
       } catch (err) {
         console.error("Error fetching profile:", err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchProfile();
   }, [user]);
 
   const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const docRef = doc(db, "patients", user.uid);
-      await updateDoc(docRef, formData);
+      if (user) {
+        const docRef = doc(db, "patients", user.uid);
+        await updateDoc(docRef, formData);
+      }
       setProfile(formData);
-      setIsEditing(false);
+      setActiveTab("info");
       setSuccessMsg("Profile updated successfully!");
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch (err) {
@@ -97,7 +85,7 @@ const ProfilePage = () => {
 
   const handleCancel = () => {
     setFormData(profile);
-    setIsEditing(false);
+    setActiveTab("info");
   };
 
   const handleLogout = async () => {
@@ -107,6 +95,10 @@ const ProfilePage = () => {
     } catch (err) {
       console.error("Logout error:", err);
     }
+  };
+
+  const handleReschedule = (appt) => {
+    navigate("/reschedule", { state: { appointment: appt } });
   };
 
   if (loading) {
@@ -127,11 +119,11 @@ const ProfilePage = () => {
           <div className="d-flex justify-content-between align-items-center py-4">
             <div className="d-flex align-items-center gap-3">
               <div className="profile-avatar">
-                {profile.fullName ? profile.fullName.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase()}
+                {profile.fullName ? profile.fullName.charAt(0).toUpperCase() : "P"}
               </div>
               <div>
                 <h4 className="mb-0 profile-name">{profile.fullName || "Patient"}</h4>
-                <span className="profile-email">{user?.email}</span>
+                <span className="profile-email">{user?.email || profile.email}</span>
               </div>
             </div>
             <button className="btn btn-logout" onClick={handleLogout}>
@@ -148,7 +140,7 @@ const ProfilePage = () => {
       {/* Main Content */}
       <div className="container py-4">
         {successMsg && (
-          <div className="alert alert-success alert-dismissible fade show" role="alert">
+          <div className="alert alert-success fade show" role="alert">
             {successMsg}
           </div>
         )}
@@ -177,7 +169,7 @@ const ProfilePage = () => {
           <li className="nav-item">
             <button
               className={`nav-link ${activeTab === "edit" ? "active" : ""}`}
-              onClick={() => { setActiveTab("edit"); setIsEditing(true); }}
+              onClick={() => setActiveTab("edit")}
             >
               Edit Profile
             </button>
@@ -208,7 +200,7 @@ const ProfilePage = () => {
               ))}
             </div>
             <div className="mt-4">
-              <button className="btn btn-primary-custom" onClick={() => { setActiveTab("edit"); setIsEditing(true); }}>
+              <button className="btn btn-primary-custom" onClick={() => setActiveTab("edit")}>
                 Edit Profile
               </button>
             </div>
@@ -238,13 +230,17 @@ const ProfilePage = () => {
                     </div>
                     <div className="appt-details">
                       <div className="appt-type">{appt.type}</div>
-                      <div className="appt-meta">
-                        {appt.doctor} · {appt.time}
-                      </div>
+                      <div className="appt-meta">{appt.doctor} · {appt.time}</div>
                     </div>
                     <span className={`appt-status ${appt.status.toLowerCase()}`}>
                       {appt.status}
                     </span>
+                    <button
+                      className="btn-reschedule"
+                      onClick={() => handleReschedule(appt)}
+                    >
+                      Reschedule
+                    </button>
                   </div>
                 ))}
               </div>
@@ -258,55 +254,23 @@ const ProfilePage = () => {
             <div className="row g-3">
               <div className="col-md-6">
                 <label className="form-label">Full Name</label>
-                <input
-                  type="text"
-                  className="form-control custom-input"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  placeholder="Enter your full name"
-                />
+                <input type="text" className="form-control custom-input" name="fullName" value={formData.fullName} onChange={handleInputChange} placeholder="Enter your full name" />
               </div>
               <div className="col-md-6">
                 <label className="form-label">Email</label>
-                <input
-                  type="email"
-                  className="form-control custom-input"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="Enter your email"
-                />
+                <input type="email" className="form-control custom-input" name="email" value={formData.email} onChange={handleInputChange} placeholder="Enter your email" />
               </div>
               <div className="col-md-6">
                 <label className="form-label">Phone Number</label>
-                <input
-                  type="tel"
-                  className="form-control custom-input"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  placeholder="Enter your phone number"
-                />
+                <input type="tel" className="form-control custom-input" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="Enter your phone number" />
               </div>
               <div className="col-md-6">
                 <label className="form-label">Date of Birth</label>
-                <input
-                  type="date"
-                  className="form-control custom-input"
-                  name="dob"
-                  value={formData.dob}
-                  onChange={handleInputChange}
-                />
+                <input type="date" className="form-control custom-input" name="dob" value={formData.dob} onChange={handleInputChange} />
               </div>
               <div className="col-md-6">
                 <label className="form-label">Gender</label>
-                <select
-                  className="form-select custom-input"
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleInputChange}
-                >
+                <select className="form-select custom-input" name="gender" value={formData.gender} onChange={handleInputChange}>
                   <option value="">Select gender</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
@@ -316,24 +280,12 @@ const ProfilePage = () => {
               </div>
               <div className="col-md-6">
                 <label className="form-label">Address</label>
-                <input
-                  type="text"
-                  className="form-control custom-input"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  placeholder="Enter your address"
-                />
+                <input type="text" className="form-control custom-input" name="address" value={formData.address} onChange={handleInputChange} placeholder="Enter your address" />
               </div>
             </div>
             <div className="d-flex gap-3 mt-4">
               <button className="btn btn-primary-custom" onClick={handleSave} disabled={saving}>
-                {saving ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status" />
-                    Saving...
-                  </>
-                ) : "Save Changes"}
+                {saving ? "Saving..." : "Save Changes"}
               </button>
               <button className="btn btn-outline-secondary" onClick={handleCancel}>
                 Cancel

@@ -3,7 +3,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import BookingForm from './components/pages/BookingForm';
-import ProfilePage from './pages/ProfilePage';
+import ProfilePage from './components/pages/ProfilePage';
 import './App.css';
 export default function App() {
   return (

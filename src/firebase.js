@@ -1,17 +1,15 @@
-// src/firebase.js
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-// Replace these values with your Firebase project credentials
-// Go to: https://console.firebase.google.com → Your Project → Project Settings → Your Apps
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyBJXVAcwZ5Xdp4P01IOPUitqkL1YO54AXc",
+  authDomain: "x-ray-booking-system.firebaseapp.com",
+  projectId: "x-ray-booking-system",
+  storageBucket: "x-ray-booking-system.firebasestorage.app",
+  messagingSenderId: "243527174518",
+  appId: "1:243527174518:web:22fd4f7358715f38ef9257",
+  measurementId: "G-5PC9LE3RG7"
 };
 
 const app = initializeApp(firebaseConfig);
