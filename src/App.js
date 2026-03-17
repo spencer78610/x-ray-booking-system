@@ -15,14 +15,6 @@ export default function App() {
   
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
-        <Route path="/register" element={<CreateAccount />} />
-        <Route path="/booking" element={currentUser ? <BookingForm user={currentUser} /> : <Navigate to="/login" replace />} />
-        <Route path="/profile" element={currentUser ? <ProfilePage user={currentUser} /> : <Navigate to="/login" replace />} />
-      </Routes>
-    </Router>
+    <BookingForm />
   );
 }
