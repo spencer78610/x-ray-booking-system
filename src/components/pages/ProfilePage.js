@@ -31,6 +31,7 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+  
 
   useEffect(() => {
     const fetchProfile = async () => {
