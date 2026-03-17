@@ -92,7 +92,7 @@ const ProfilePage = () => {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      navigate("/home");
+      navigate("/login");
     } catch (err) {
       console.error("Logout error:", err);
     }
