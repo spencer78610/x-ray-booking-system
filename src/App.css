@@ -192,7 +192,7 @@ body {
 
 .progress-bar {
   height: 100%;
-  background-color: #4caf50;
+  background-color: #005885;
   width: 0%;
   transition: width 0.5s ease-in-out;
   border-radius: 5px;
@@ -205,5 +205,68 @@ body {
 
 .breadcrumbs .active-step {
   font-weight: bold;
-  color: #4caf50;
+  color: #005885;
+}
+
+/* =============== */
+/* Appointment Scheduling times */
+/* =============== */
+
+
+.time-slots{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:10px;
+}
+
+.time-slot{
+  padding:25px 50px;
+  border:1px solid #ccc;
+  background:white;
+  cursor:pointer;
+}
+
+.time-slot:hover{
+  background:#e6f4ff;
+}
+
+.time-slot.selected{
+  background:#2563eb;
+  color:white;
+  border-color:#2563eb;
+}
+
+.booked {
+  background: #f3f3f3;
+  color: #000000;
+  border-color: #ddd;
+  cursor: not-allowed;
+  position: relative;
+  overflow: hidden;
+  opacity: 0.6;
+}
+
+.booked::before,
+.booked::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 140%;
+  height: 2px;
+  background: #999;
+}
+
+.booked::before {
+  transform: translate(-50%, -50%) rotate(23deg);
+}
+
+.booked::after {
+  transform: translate(-50%, -50%) rotate(-23deg);
+}
+
+.time-slot.selected{
+  background:#2563eb;
+  color:white;
 }
