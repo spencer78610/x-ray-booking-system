@@ -619,7 +619,7 @@ export default function CreateAccountPage({ onAccountCreated, onGoToLogin }) {
             </form>
 
             <p className="ca-login-link">
-              Already have an account? <a href="/login" onClick={e => { e.preventDefault(); if (onGoToLogin) onGoToLogin(); }}>Sign in</a>
+              Already have an account? <a href="/LoginPage" onClick={e => { e.preventDefault(); if (onGoToLogin) onGoToLogin(); }}>Sign in</a>
             </p>
           </div>
         </div>
