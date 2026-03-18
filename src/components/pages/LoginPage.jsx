@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../firebase";
+import { useNavigate } from 'react-router-dom';
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@500&display=swap');
@@ -254,7 +255,7 @@ const styles = `
   }
 
   .form-forgot {
-    font-size: 13px;
+    font-size: 18px;
     color: #0a6e8a;
     text-decoration: none;
     font-weight: 500;
@@ -305,7 +306,7 @@ const styles = `
 
   .login-divider {
     text-align: center;
-    font-size: 12px;
+    font-size: 18px;
     color: #9bb0be;
     margin: 20px 0 0;
   }
@@ -327,6 +328,17 @@ export default function LoginPage({ onLogin, onGoToRegister }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const navigate = useNavigate();
+
+  const handleLogin = (user) => {
+    onLogin(user); // still call the prop to set currentUser in App
+    if (user.role === 'patient') {
+      navigate('/profile');
+    }  else {
+      navigate('/booking');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();

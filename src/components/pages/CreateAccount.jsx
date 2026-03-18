@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "../../firebase";
+import { useNavigate } from 'react-router-dom';
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@500&display=swap');
@@ -336,7 +337,7 @@ const styles = `
   
   .ca-login-link {
     text-align: center;
-    font-size: 13px;
+    font-size: 18px;
     color: #6b7e8d;
     margin-top: 20px;
   }
@@ -378,6 +379,8 @@ export default function CreateAccountPage({ onAccountCreated, onGoToLogin }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const [submitError, setSubmitError] = useState('');
+
+  const navigate = useNavigate();
 
   const strength = getPasswordStrength(form.password);
 
@@ -555,7 +558,7 @@ export default function CreateAccountPage({ onAccountCreated, onGoToLogin }) {
                 {form.password && (
                   <>
                     <div className="ca-strength-bar">
-                      {[1,2,3,4].map(i => (
+                      {[1, 2, 3, 4].map(i => (
                         <div key={i} className={`ca-strength-seg ${i <= strength.score ? strength.cls : ''}`} />
                       ))}
                     </div>
@@ -579,7 +582,7 @@ export default function CreateAccountPage({ onAccountCreated, onGoToLogin }) {
                 <input type="checkbox" checked={agreed} onChange={e => { setAgreed(e.target.checked); setErrors(prev => ({ ...prev, agreed: '' })); }} />
                 I agree to the <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>
               </label>
-              {errors.agreed && <div className="ca-field-error" style={{marginTop: '-12px', marginBottom: '12px'}}>{errors.agreed}</div>}
+              {errors.agreed && <div className="ca-field-error" style={{ marginTop: '-12px', marginBottom: '12px' }}>{errors.agreed}</div>}
 
               <button className="ca-btn" type="submit" disabled={loading}>
                 {loading ? 'Creating account…' : `Create ${role === 'patient' ? 'Patient' : 'Staff'} Account`}

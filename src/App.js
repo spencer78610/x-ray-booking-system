@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './components/pages/LoginPage';
 import CreateAccount from './components/pages/CreateAccount';
 import BookingForm from './components/pages/BookingForm';
@@ -9,16 +10,10 @@ import './App.css';
 // Features folder contains smaller reusable components used within pages.
 
 export default function App() {
-  const [page, setPage] = useState('login');
   const [currentUser, setCurrentUser] = useState(null);
 
   const handleLogin = (user) => {
     setCurrentUser(user);
-    if (user.role === 'patient') {
-      setPage('booking');
-    } else {
-      setPage('profile');
-    }
   };
 
   const handleAccountCreated = (user) => {
