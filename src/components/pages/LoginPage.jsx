@@ -1,6 +1,5 @@
+
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../firebase";
 import { useNavigate } from 'react-router-dom';
 
 const styles = `
@@ -320,7 +319,7 @@ const styles = `
   }
 `;
 
-export default function LoginPage({ onLogin, onGoToRegister }) {
+export default function LoginPage({ onLogin }) {
   const [role, setRole] = useState('patient');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -352,30 +351,12 @@ export default function LoginPage({ onLogin, onGoToRegister }) {
 
     setLoading(true);
 
-    try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      setSuccess(`Logged in as ${role === 'patient' ? 'Patient' : 'Staff Member'}.`);
-      if (onLogin) onLogin({ email, role, uid: result.user.uid });
-    } catch (err) {
-      switch (err.code) {
-        case 'auth/user-not-found':
-          setError('No account found with this email.');
-          break;
-        case 'auth/wrong-password':
-          setError('Incorrect password. Please try again.');
-          break;
-        case 'auth/invalid-email':
-          setError('Please enter a valid email address.');
-          break;
-        case 'auth/too-many-requests':
-          setError('Too many failed attempts. Please try again later.');
-          break;
-        default:
-          setError('Login failed. Please check your credentials.');
-      }
-    } finally {
+    // TODO: Replace with your real Firebase auth call
+    setTimeout(() => {
       setLoading(false);
-    }
+      const user = { email, role };
+      handleLogin(user); // ← call handleLogin instead of onLogin directly
+    }, 1200);
   };
 
   return (
@@ -401,28 +382,6 @@ export default function LoginPage({ onLogin, onGoToRegister }) {
 
         <div className="login-form-side">
           <div className="login-card">
-
-            {/* Top row with Create Account button */}
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
-              <button
-                type="button"
-                onClick={onGoToRegister}
-                style={{
-                  background: "transparent",
-                  border: "1.5px solid #0a6e8a",
-                  color: "#0a6e8a",
-                  borderRadius: "8px",
-                  padding: "7px 16px",
-                  fontSize: "13px",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  fontFamily: "'DM Sans', sans-serif",
-                }}
-              >
-                Create Account
-              </button>
-            </div>
-
             <h2 className="login-card-title">Welcome back</h2>
             <p className="login-card-sub">Sign in to continue to your portal</p>
 
@@ -496,9 +455,11 @@ export default function LoginPage({ onLogin, onGoToRegister }) {
             </form>
 
             <p className="login-divider">
-              {role === 'patient'
-                ? 'New patient? Click "Create Account" to register.'
-                : 'Staff access issues? Contact your IT administrator.'}
+              {role === 'patient' ? (
+                <>New patient? <a href="/register" className="form-forgot">Create an account</a></>
+              ) : (
+                'Staff access issues? Contact your IT administrator.'
+              )}
             </p>
           </div>
         </div>
