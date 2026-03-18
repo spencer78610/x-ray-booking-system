@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { auth, db } from "../../firebase";
 import { signOut } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
@@ -20,9 +19,7 @@ const dummyAppointments = [
   { id: 2, date: "2026-03-28", time: "2:30 PM", type: "Follow-up", doctor: "Dr. Patel", status: "Pending" },
 ];
 
-const ProfilePage = () => {
-  const navigate = useNavigate();
-  const user = auth.currentUser;
+const ProfilePage = ({ user, onLogout }) => {
 
   const [profile, setProfile] = useState(dummyProfile);
   const [formData, setFormData] = useState(dummyProfile);
@@ -89,18 +86,18 @@ const ProfilePage = () => {
     setActiveTab("info");
   };
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigate("/home");
-    } catch (err) {
-      console.error("Logout error:", err);
-    }
-  };
+const handleLogout = async () => {
+  try {
+    await signOut(auth);
+    onLogout();
+  } catch (err) {
+    console.error("Logout error:", err);
+  }
+};
 
-  const handleReschedule = (appt) => {
-    navigate("/reschedule", { state: { appointment: appt } });
-  };
+const handleReschedule = (appt) => {
+  console.log("Reschedule appointment:", appt);
+};
 
   if (loading) {
     return (

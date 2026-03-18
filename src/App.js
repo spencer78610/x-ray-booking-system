@@ -6,23 +6,42 @@ import BookingForm from './components/pages/BookingForm';
 import ProfilePage from './components/pages/ProfilePage';
 import './App.css';
 
+// Pages folder contains main page components.
+// Features folder contains smaller reusable components used within pages.
+
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
 
   const handleLogin = (user) => {
     setCurrentUser(user);
   };
-  
+
+  const handleAccountCreated = (user) => {
+    setCurrentUser(user);
+    setPage('profile');
+  };
+
+  if (page === 'register') {
+    return (
+      <CreateAccount
+        onAccountCreated={handleAccountCreated}
+        onGoToLogin={() => setPage('login')}
+      />
+    );
+  }
+
+  if (page === 'booking') {
+    return <BookingForm user={currentUser} onLogout={() => setPage('login')} />;
+  }
+
+  if (page === 'profile') {
+    return <ProfilePage user={currentUser} onLogout={() => setPage('login')} />;
+  }
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
-        <Route path="/register" element={<CreateAccount />} />
-        <Route path="/booking" element={currentUser ? <BookingForm user={currentUser} /> : <Navigate to="/login" replace />} />
-        <Route path="/profile" element={currentUser ? <ProfilePage user={currentUser} /> : <Navigate to="/login" replace />} />
-      </Routes>
-    </Router>
+    <LoginPage
+      onLogin={handleLogin}
+      onGoToRegister={() => setPage('register')}
+    />
   );
 }

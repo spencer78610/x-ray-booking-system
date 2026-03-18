@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from "../../firebase";
 import { useNavigate } from 'react-router-dom';
 
 const styles = `
@@ -118,7 +121,6 @@ const styles = `
     font-size: 13px;
   }
 
-  /* Form side */
   .ca-form-side {
     flex: 1;
     display: flex;
@@ -146,7 +148,6 @@ const styles = `
     margin-bottom: 28px;
   }
 
-  /* Role toggle */
   .ca-role-toggle {
     display: flex;
     background: #e2eaf0;
@@ -185,21 +186,11 @@ const styles = `
     transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
   }
 
-  .ca-role-slider.staff {
-    transform: translateX(calc(100% + 8px));
-  }
+  .ca-role-slider.staff { transform: translateX(calc(100% + 8px)); }
 
-  /* Form fields */
-  .ca-row {
-    display: flex;
-    gap: 12px;
-  }
-
+  .ca-row { display: flex; gap: 12px; }
   .ca-row .ca-group { flex: 1; }
-
-  .ca-group {
-    margin-bottom: 16px;
-  }
+  .ca-group { margin-bottom: 16px; }
 
   .ca-label {
     display: block;
@@ -241,16 +232,9 @@ const styles = `
   }
 
   .ca-input::placeholder { color: #aabbc7; }
-
   .ca-input.error { border-color: #e74c3c; }
+  .ca-field-error { font-size: 11px; color: #e74c3c; margin-top: 4px; }
 
-  .ca-field-error {
-    font-size: 11px;
-    color: #e74c3c;
-    margin-top: 4px;
-  }
-
-  /* Staff ID field */
   .ca-staff-field {
     background: #f7fafc;
     border: 1.5px dashed #b0c8d6;
@@ -273,12 +257,7 @@ const styles = `
 
   .ca-staff-field::placeholder { color: #aabbc7; }
 
-  /* Password strength */
-  .ca-strength-bar {
-    display: flex;
-    gap: 4px;
-    margin-top: 8px;
-  }
+  .ca-strength-bar { display: flex; gap: 4px; margin-top: 8px; }
 
   .ca-strength-seg {
     height: 3px;
@@ -292,14 +271,8 @@ const styles = `
   .ca-strength-seg.fair { background: #f39c12; }
   .ca-strength-seg.good { background: #2ecc71; }
   .ca-strength-seg.strong { background: #0a6e8a; }
+  .ca-strength-label { font-size: 11px; color: #8aa0b0; margin-top: 4px; }
 
-  .ca-strength-label {
-    font-size: 11px;
-    color: #8aa0b0;
-    margin-top: 4px;
-  }
-
-  /* Terms */
   .ca-terms {
     display: flex;
     align-items: flex-start;
@@ -322,7 +295,6 @@ const styles = `
   .ca-terms a { color: #0a6e8a; text-decoration: none; }
   .ca-terms a:hover { text-decoration: underline; }
 
-  /* Submit */
   .ca-btn {
     width: 100%;
     padding: 13px;
@@ -342,7 +314,6 @@ const styles = `
   .ca-btn:active { transform: scale(0.99); }
   .ca-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-  /* Alerts */
   .ca-error {
     background: #fff0f0;
     border: 1px solid #f5c6c6;
@@ -363,6 +334,7 @@ const styles = `
     margin-bottom: 16px;
   }
 
+  
   .ca-login-link {
     text-align: center;
     font-size: 18px;
@@ -370,12 +342,7 @@ const styles = `
     margin-top: 20px;
   }
 
-  .ca-login-link a {
-    color: #0a6e8a;
-    font-weight: 500;
-    text-decoration: none;
-  }
-
+  .ca-login-link a { color: #0a6e8a; font-weight: 500; text-decoration: none; }
   .ca-login-link a:hover { text-decoration: underline; }
 
   @media (max-width: 768px) {
@@ -436,84 +403,95 @@ export default function CreateAccountPage({ onAccountCreated, onGoToLogin }) {
     return e;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitError('');
     const e2 = validate();
     if (Object.keys(e2).length > 0) { setErrors(e2); return; }
 
     setLoading(true);
-    // TODO: Replace with your real registration API call
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      // Create user in Firebase Auth
+      const result = await createUserWithEmailAndPassword(auth, form.email, form.password);
+      const uid = result.user.uid;
+
+      // Save user data to Firestore
+      await setDoc(doc(db, 'patients', uid), {
+        fullName: `${form.firstName} ${form.lastName}`,
+        email: form.email,
+        phone: form.phone || '',
+        dob: '',
+        gender: '',
+        address: '',
+        role,
+        ...(role === 'staff' && { staffId: form.staffId, department: form.department }),
+        createdAt: new Date().toISOString(),
+      });
+
       setSuccess(`Account created! Welcome, ${form.firstName}.`);
-      if (onAccountCreated) onAccountCreated({ ...form, role });
-      setTimeout(() => navigate('/login'), 1500); // brief delay so user sees the success message
-    }, 1400);
+      if (onAccountCreated) onAccountCreated({ email: form.email, role, uid });
+    } catch (err) {
+      switch (err.code) {
+        case 'auth/email-already-in-use':
+          setSubmitError('An account with this email already exists.');
+          break;
+        case 'auth/invalid-email':
+          setSubmitError('Please enter a valid email address.');
+          break;
+        case 'auth/weak-password':
+          setSubmitError('Password is too weak. Please use a stronger password.');
+          break;
+        default:
+          setSubmitError('Registration failed. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <>
       <style>{styles}</style>
       <div className="ca-root">
-
-        {/* Left panel */}
         <div className="ca-panel">
           <div className="ca-panel-logo">
             <div className="ca-panel-logo-icon">🩻</div>
-            <span className="ca-panel-logo-text">XRAY Portal</span>
+            <span className="ca-panel-logo-text">London X-ray</span>
           </div>
           <div className="ca-panel-body">
             <h1 className="ca-panel-heading">Get started<br />in minutes.</h1>
             <p className="ca-panel-sub">Create your account and get instant access to appointments, results, and more.</p>
           </div>
           <div className="ca-panel-steps">
-            <div className="ca-step">
-              <div className="ca-step-num">1</div>
-              <span className="ca-step-text">Fill in your personal details</span>
-            </div>
-            <div className="ca-step">
-              <div className="ca-step-num">2</div>
-              <span className="ca-step-text">Choose your role — patient or staff</span>
-            </div>
-            <div className="ca-step">
-              <div className="ca-step-num">3</div>
-              <span className="ca-step-text">Sign in and access your portal</span>
-            </div>
+            <div className="ca-step"><div className="ca-step-num">1</div><span className="ca-step-text">Fill in your personal details</span></div>
+            <div className="ca-step"><div className="ca-step-num">2</div><span className="ca-step-text">Choose your role — patient or staff</span></div>
+            <div className="ca-step"><div className="ca-step-num">3</div><span className="ca-step-text">Sign in and access your portal</span></div>
           </div>
         </div>
 
-        {/* Right form */}
         <div className="ca-form-side">
           <div className="ca-card">
             <h2 className="ca-card-title">Create an account</h2>
             <p className="ca-card-sub">Register as a patient or staff member</p>
 
-            {/* Role toggle */}
             <div className="ca-role-toggle">
               <div className={`ca-role-slider ${role === 'staff' ? 'staff' : ''}`} />
               <button type="button" className={`ca-role-btn ${role === 'patient' ? 'active' : ''}`}
-                onClick={() => { setRole('patient'); setErrors({}); }}>
-                🧑‍⚕️ Patient
-              </button>
+                onClick={() => { setRole('patient'); setErrors({}); }}>🧑‍⚕️ Patient</button>
               <button type="button" className={`ca-role-btn ${role === 'staff' ? 'active' : ''}`}
-                onClick={() => { setRole('staff'); setErrors({}); }}>
-                👨‍💼 Staff
-              </button>
+                onClick={() => { setRole('staff'); setErrors({}); }}>👨‍💼 Staff</button>
             </div>
 
             <form onSubmit={handleSubmit}>
               {submitError && <div className="ca-error">⚠️ {submitError}</div>}
-              {success && <div className="ca-success"> {success}</div>}
+              {success && <div className="ca-success">✅ {success}</div>}
 
-              {/* Name row */}
               <div className="ca-row">
                 <div className="ca-group">
                   <label className="ca-label">First name</label>
                   <div className="ca-input-wrap">
                     <span className="ca-input-icon">👤</span>
-                    <input className={`ca-input ${errors.firstName ? 'error' : ''}`}
-                      type="text" placeholder="Jane"
+                    <input className={`ca-input ${errors.firstName ? 'error' : ''}`} type="text" placeholder="Jane"
                       value={form.firstName} onChange={e => update('firstName', e.target.value)} />
                   </div>
                   {errors.firstName && <div className="ca-field-error">{errors.firstName}</div>}
@@ -522,45 +500,39 @@ export default function CreateAccountPage({ onAccountCreated, onGoToLogin }) {
                   <label className="ca-label">Last name</label>
                   <div className="ca-input-wrap">
                     <span className="ca-input-icon">👤</span>
-                    <input className={`ca-input ${errors.lastName ? 'error' : ''}`}
-                      type="text" placeholder="Doe"
+                    <input className={`ca-input ${errors.lastName ? 'error' : ''}`} type="text" placeholder="Doe"
                       value={form.lastName} onChange={e => update('lastName', e.target.value)} />
                   </div>
                   {errors.lastName && <div className="ca-field-error">{errors.lastName}</div>}
                 </div>
               </div>
 
-              {/* Email */}
               <div className="ca-group">
                 <label className="ca-label">Email address</label>
                 <div className="ca-input-wrap">
                   <span className="ca-input-icon">✉</span>
-                  <input className={`ca-input ${errors.email ? 'error' : ''}`}
-                    type="email" placeholder="jane@email.com"
+                  <input className={`ca-input ${errors.email ? 'error' : ''}`} type="email" placeholder="jane@email.com"
                     value={form.email} onChange={e => update('email', e.target.value)} />
                 </div>
                 {errors.email && <div className="ca-field-error">{errors.email}</div>}
               </div>
 
-              {/* Phone */}
               <div className="ca-group">
                 <label className="ca-label">Phone number</label>
                 <div className="ca-input-wrap">
                   <span className="ca-input-icon">📞</span>
-                  <input className="ca-input" type="tel" placeholder="+1 (555) 000-0000"
+                  <input className="ca-input" type="tel" placeholder="+44 7700 000000"
                     value={form.phone} onChange={e => update('phone', e.target.value)} />
                 </div>
               </div>
 
-              {/* Staff-only fields */}
               {role === 'staff' && (
                 <>
                   <div className="ca-group">
                     <label className="ca-label">Staff ID</label>
                     <div className="ca-input-wrap">
                       <span className="ca-input-icon">🪪</span>
-                      <input className={`ca-staff-field ${errors.staffId ? 'error' : ''}`}
-                        type="text" placeholder="e.g. STF-00123"
+                      <input className={`ca-staff-field ${errors.staffId ? 'error' : ''}`} type="text" placeholder="e.g. STF-00123"
                         value={form.staffId} onChange={e => update('staffId', e.target.value)} />
                     </div>
                     {errors.staffId && <div className="ca-field-error">{errors.staffId}</div>}
@@ -576,13 +548,11 @@ export default function CreateAccountPage({ onAccountCreated, onGoToLogin }) {
                 </>
               )}
 
-              {/* Password */}
               <div className="ca-group">
                 <label className="ca-label">Password</label>
                 <div className="ca-input-wrap">
                   <span className="ca-input-icon">🔒</span>
-                  <input className={`ca-input ${errors.password ? 'error' : ''}`}
-                    type="password" placeholder="Min. 8 characters"
+                  <input className={`ca-input ${errors.password ? 'error' : ''}`} type="password" placeholder="Min. 8 characters"
                     value={form.password} onChange={e => update('password', e.target.value)} />
                 </div>
                 {form.password && (
@@ -598,19 +568,16 @@ export default function CreateAccountPage({ onAccountCreated, onGoToLogin }) {
                 {errors.password && <div className="ca-field-error">{errors.password}</div>}
               </div>
 
-              {/* Confirm password */}
               <div className="ca-group">
                 <label className="ca-label">Confirm password</label>
                 <div className="ca-input-wrap">
                   <span className="ca-input-icon">🔒</span>
-                  <input className={`ca-input ${errors.confirmPassword ? 'error' : ''}`}
-                    type="password" placeholder="Re-enter your password"
+                  <input className={`ca-input ${errors.confirmPassword ? 'error' : ''}`} type="password" placeholder="Re-enter your password"
                     value={form.confirmPassword} onChange={e => update('confirmPassword', e.target.value)} />
                 </div>
                 {errors.confirmPassword && <div className="ca-field-error">{errors.confirmPassword}</div>}
               </div>
 
-              {/* Terms */}
               <label className="ca-terms">
                 <input type="checkbox" checked={agreed} onChange={e => { setAgreed(e.target.checked); setErrors(prev => ({ ...prev, agreed: '' })); }} />
                 I agree to the <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>
@@ -623,11 +590,10 @@ export default function CreateAccountPage({ onAccountCreated, onGoToLogin }) {
             </form>
 
             <p className="ca-login-link">
-              Already have an account? <a href="/login" onClick={e => { e.preventDefault(); navigate('/login'); }}>Sign in</a>
+              Already have an account? <a href="/login" onClick={e => { e.preventDefault(); if (onGoToLogin) onGoToLogin(); }}>Sign in</a>
             </p>
           </div>
         </div>
-
       </div>
     </>
   );
