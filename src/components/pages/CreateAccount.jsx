@@ -452,7 +452,7 @@ export default function CreateAccountPage({ onAccountCreated, onGoToLogin }) {
         <div className="ca-panel">
           <div className="ca-panel-logo">
             <div className="ca-panel-logo-icon">🩻</div>
-            <span className="ca-panel-logo-text">XRAY Portal</span>
+            <span className="ca-panel-logo-text">London X-ray</span>
           </div>
           <div className="ca-panel-body">
             <h1 className="ca-panel-heading">Get started<br />in minutes.</h1>
