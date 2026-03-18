@@ -333,6 +333,7 @@ const styles = `
     margin-bottom: 16px;
   }
 
+  
   .ca-login-link {
     text-align: center;
     font-size: 13px;
