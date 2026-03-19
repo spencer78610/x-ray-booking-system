@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 
-import './CancelReschedule.css';
 
 function CancelReschedule({ formData, onReschedule, onCancel, onGoToProfile }) {
 
