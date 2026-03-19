@@ -3,8 +3,6 @@ import { useState, useEffect } from 'react';
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
-export default function AppointmentScheduling({ formData, handleChange, errors }) {
-
   const clinicHours = {
     "440 Boler Road": {
       mon: ["07:00", "21:00"],
@@ -48,15 +46,19 @@ export default function AppointmentScheduling({ formData, handleChange, errors }
     }
   };
 
-  const bookedSlots = ["09:00 AM", "09:30 AM"]; // Example of booked slots for demonstration
-  const isBooked = (time) => bookedSlots.includes(time);
   const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
-  const getDayKey = (dateString) => {
+const getDayKey = (dateString) => {
     const [year, month, day] = dateString.split("-");
     const date = new Date(year, month - 1, day);
     return days[date.getDay()];
   };
+
+
+export default function AppointmentScheduling({ formData, handleChange, errors }) {
+
+  const bookedSlots = ["09:00 AM", "09:30 AM"]; // Example of booked slots for demonstration
+  const isBooked = (time) => bookedSlots.includes(time);
 
   const isDateAvailable = (date) => {
     if (!formData.appointmentLocation) return false;

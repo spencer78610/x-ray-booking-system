@@ -288,11 +288,11 @@ function BookingForm() {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
 
-    setStep(6);
-  };
+  //   setStep(6);
+  // };
 
   const confirmSubmission = () => {
     console.log("FINAL SUBMISSION:", formData);

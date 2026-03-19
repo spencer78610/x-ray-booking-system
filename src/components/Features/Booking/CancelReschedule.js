@@ -7,20 +7,6 @@ function CancelReschedule({ formData, onReschedule, onCancel, onGoToProfile }) {
   const [newTime, setNewTime] = useState('');
   const [action, setAction] = useState('');
 
-  const handleReschedule = () => {
-    if (!newDate || !newTime) {
-      alert('Please select a new date and time.');
-      return;
-    }
-    onReschedule(newDate, newTime);
-    setAction('rescheduled');
-  };
-
-  const handleCancel = () => {
-    onCancel();
-    setAction('cancelled');
-  };
-
   if (action === 'rescheduled') {
     return (
       <div className="cancel-reschedule-container">
