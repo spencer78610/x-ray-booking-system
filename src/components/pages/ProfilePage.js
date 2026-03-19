@@ -209,7 +209,14 @@ const handleReschedule = (appt) => {
                   </button>
               </div>
             ) : (
-              <div className="d-flex flex-column gap-3">
+              <>
+             <div className="d-flex justify-content-between align-items-center mb-3">
+              <h6 className="mb-0">Your Appointments</h6>
+              <button className="btn btn-primary-custom" onClick={onBookAppointment}>
+                + Book New Appointment
+              </button>
+            </div>
+             <div className="d-flex flex-column gap-3">
                 {appointments.map((appt) => (
                   <div className="appointment-card" key={appt.id}>
                     <div className="appt-date-block">
@@ -236,6 +243,7 @@ const handleReschedule = (appt) => {
                   </div>
                 ))}
               </div>
+            </>
             )}
           </div>
         )}
