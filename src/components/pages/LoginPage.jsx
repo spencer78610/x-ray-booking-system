@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../firebase";
-import { useNavigate } from 'react-router-dom';
+
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@500&display=swap');
@@ -329,16 +329,6 @@ export default function LoginPage({ onLogin, onGoToRegister }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const navigate = useNavigate();
-
-  const handleLogin = (user) => {
-    onLogin(user); // still call the prop to set currentUser in App
-    if (user.role === 'patient') {
-      navigate('/profile');
-    }  else {
-      navigate('/booking');
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();

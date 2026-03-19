@@ -11,7 +11,7 @@ import ProgressBar from '../Features/Booking/ProgressBar';
 import StepBreadcrumbs from '../Features/Booking/Breadcrumbs';
 // import './App.css';
 
-function BookingForm() {
+function BookingForm({ user, onLogout, onGoToProfile }) {
 
   // Progress bar steps
   const steps = [
@@ -133,7 +133,10 @@ function BookingForm() {
         return (
           <>
             <Confirmation formData={formData} />
-            <button className="cR-btn" onClick={() => setStep(8)}>Cancel or Reschedule</button>
+            <div style={{ display: "flex", gap: "12px" }}>
+              <button className="cR-btn" style={{ width: "fit-content" }} onClick={() => setStep(8)}>Cancel or Reschedule</button>
+              <button className="cR-btn" style={{ width: "fit-content" }} onClick={onGoToProfile}>Go to Profile</button>
+            </div>
           </>
         );
       case 8:
@@ -141,13 +144,14 @@ function BookingForm() {
           <>
             <CancelReschedule
               formData={formData}
-              onReschedule={handleReschedule}
-              onCancel={handleCancel}
+                onReschedule={handleReschedule}
+                onCancel={handleCancel}
+                onGoToProfile={onGoToProfile}
             />
-            <div className='step-buttons'>
+            {/* <div className='step-buttons'>
               <button onClick={handleCancel} className="cancel-btn">Cancel Appointment</button>
-              <button onClick={handleReschedule} className="reschedule-btn">Confirm Reschedule</button>
-            </div>
+              <button onClick={() => handleReschedule()} className="reschedule-btn">Confirm Reschedule</button>
+            </div> */}
 
 
           </>

@@ -1,62 +1,49 @@
 import React, { useState, useEffect } from "react";
 import { auth, db } from "../../firebase";
 import { signOut } from "firebase/auth";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./ProfilePage.css";
 
-const dummyProfile = {
-  fullName: "Hadeel Ahmed",
-  email: "hadeel@london-xray.co.uk",
-  phone: "+44 7700 900123",
-  dob: "1995-03-12",
-  gender: "Female",
-  address: "14 Baker St, London",
-};
 
-const dummyAppointments = [
-  { id: 1, date: "2026-03-20", time: "10:00 AM", type: "Chest X-Ray", doctor: "Dr. Smith", status: "Confirmed" },
-  { id: 2, date: "2026-03-28", time: "2:30 PM", type: "Follow-up", doctor: "Dr. Patel", status: "Pending" },
-];
+const ProfilePage = ({ user, onLogout, onBookAppointment }) => {
 
-const ProfilePage = ({ user, onLogout }) => {
-
-  const [profile, setProfile] = useState(dummyProfile);
-  const [formData, setFormData] = useState(dummyProfile);
-  const [appointments, setAppointments] = useState(dummyAppointments);
+  const [profile, setProfile] = useState({});
+  const [formData, setFormData] = useState({});
+  const [appointments, setAppointments] = useState([]);
   const [activeTab, setActiveTab] = useState("info");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
+useEffect(() => {
+  const fetchProfile = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const docRef = doc(db, "patients", user.uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setProfile(data);
+        setFormData(data);
+      } else {
+      const defaults = { fullName: "", email: user.email || "", phone: "", dob: "", gender: "", address: "" };
+      setProfile(defaults);
+      setFormData(defaults);
       }
-      try {
-        const docRef = doc(db, "patients", user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setProfile(data);
-          setFormData(data);
-        } else {
-          const defaults = { ...dummyProfile, email: user.email || "" };
-          setProfile(defaults);
-          setFormData(defaults);
-        }
-        setAppointments(dummyAppointments);
-      } catch (err) {
-        console.error("Error fetching profile:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProfile();
-  }, [user]);
+      setAppointments([]);
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchProfile();
+}, [user]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -68,7 +55,7 @@ const ProfilePage = ({ user, onLogout }) => {
     try {
       if (user) {
         const docRef = doc(db, "patients", user.uid);
-        await updateDoc(docRef, formData);
+        await setDoc(docRef, formData,{ merge: true })
       }
       setProfile(formData);
       setActiveTab("info");
@@ -138,7 +125,7 @@ const handleReschedule = (appt) => {
       {/* Main Content */}
       <div className="container py-4">
         {successMsg && (
-          <div className="alert alert-success fade show" role="alert">
+          <div className="alert alert-success" role="alert">
             {successMsg}
           </div>
         )}
@@ -213,6 +200,9 @@ const handleReschedule = (appt) => {
                 <div className="empty-icon mb-3">📅</div>
                 <h5>No upcoming appointments</h5>
                 <p className="text-muted">You have no scheduled appointments at this time.</p>
+                  <button className="btn btn-primary-custom mt-3" onClick={onBookAppointment}>
+                    Book an Appointment
+                  </button>
               </div>
             ) : (
               <div className="d-flex flex-column gap-3">

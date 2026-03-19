@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './components/pages/LoginPage';
 import CreateAccount from './components/pages/CreateAccount';
 import BookingForm from './components/pages/BookingForm';
@@ -11,15 +10,19 @@ import './App.css';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [page, setPage] = useState('login');
 
+
+  // Logged in → go to profile
   const handleLogin = (user) => {
-    setCurrentUser(user);
-  };
-
-  const handleAccountCreated = (user) => {
     setCurrentUser(user);
     setPage('profile');
   };
+  // Signed up → book first
+    const handleAccountCreated = (user) => {
+      setCurrentUser(user);
+      setPage('booking');
+    };
 
   if (page === 'register') {
     return (
@@ -31,17 +34,30 @@ export default function App() {
   }
 
   if (page === 'booking') {
-    return <BookingForm user={currentUser} onLogout={() => setPage('login')} />;
+return (
+      <BookingForm
+        user={currentUser}
+        onLogout={() => setPage('login')}
+        onGoToProfile={() => setPage('profile')}
+      />
+    );
   }
 
   if (page === 'profile') {
-    return <ProfilePage user={currentUser} onLogout={() => setPage('login')} />;
+        return (
+      <ProfilePage
+        user={currentUser}
+        onLogout={() => setPage('login')}
+        onBookAppointment={() => setPage('booking')}
+      />
+    );
   }
 
   return (
-    <LoginPage
+        <LoginPage
       onLogin={handleLogin}
       onGoToRegister={() => setPage('register')}
     />
+    
   );
 }
