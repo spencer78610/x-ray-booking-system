@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
-export default function AppointmentScheduling({ formData, handleChange }) {
+export default function AppointmentScheduling({ formData, handleChange, errors }) {
 
   const clinicHours = {
     "440 Boler Road": {
@@ -126,6 +126,7 @@ export default function AppointmentScheduling({ formData, handleChange }) {
           name="appointmentLocation"
           value={formData.appointmentLocation}
           onChange={handleChange}
+          className={errors.appointmentLocation ? 'error' : ''}
         >
           <option value="">Select a location</option>
           <option value="440 Boler Road">440 Boler Road</option>
@@ -134,6 +135,7 @@ export default function AppointmentScheduling({ formData, handleChange }) {
           <option value="1657 Dundas Street East">1657 Dundas Street East</option>
           <option value="3209 Wonderland Road South">3209 Wonderland Road South</option>
         </select>
+        {errors.appointmentLocation && <p className="error-text">{errors.appointmentLocation}</p>}
       </div>
 
       <div className="form-group">
@@ -150,14 +152,19 @@ export default function AppointmentScheduling({ formData, handleChange }) {
           tileDisabled={({ date }) =>
             date < new Date() || !isDateAvailable(date)
           }
+          className={errors.appointmentDate ? 'error' : ''}
         />
+
+        {errors.appointmentDate && (
+          <p className="error-text">{errors.appointmentDate}</p>
+        )}
       </div>
 
       {availableSlots.length > 0 && (
         <div className="form-group full-width">
           <label>Available Time Slots</label>
 
-          <div className="time-slots">
+          <div className={`time-slots ${errors.appointmentTime ? 'error' : ''}`}>
 
             {availableSlots.map((slot) => {
 
@@ -180,7 +187,9 @@ export default function AppointmentScheduling({ formData, handleChange }) {
             })}
 
           </div>
-
+            {errors.appointmentTime && (
+                    <p className="error-text">{errors.appointmentTime}</p>
+                  )}
         </div>
       )}
 
