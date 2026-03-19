@@ -410,7 +410,7 @@ export default function LoginPage({ onLogin }) {
               <div className="form-group">
                 <label className="form-label">Email address</label>
                 <div className="form-input-wrap">
-                  <span className="form-input-icon">✉</span>
+                  <span className="form-input-icon"> </span> 
                   <input
                     className="form-input"
                     type="email"
@@ -425,7 +425,7 @@ export default function LoginPage({ onLogin }) {
               <div className="form-group">
                 <label className="form-label">Password</label>
                 <div className="form-input-wrap">
-                  <span className="form-input-icon">🔒</span>
+                  <span className="form-input-icon"></span>
                   <input
                     className="form-input"
                     type="password"
