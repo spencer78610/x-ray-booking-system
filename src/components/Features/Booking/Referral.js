@@ -1,5 +1,5 @@
 
-export default function Referral({ formData, handleChange }) {
+export default function Referral({ formData, handleChange, errors }) {
 
   return (
     <div className="form-grid booking-form">
@@ -7,7 +7,7 @@ export default function Referral({ formData, handleChange }) {
       <div className="form-group full-width">
         <label>Do you have a referral?</label>
 
-        <div className="radio-group">
+        <div className={` radio-group ${errors.referral ? 'error' : ''}`}>
           <label>
             <input
               type="radio"
@@ -29,7 +29,9 @@ export default function Referral({ formData, handleChange }) {
             />
             No
           </label>
+
         </div>
+        {errors.referral && <p className="error-text">{errors.referral}</p>}
       </div>
 
       {/* Conditional fields */}
@@ -42,8 +44,10 @@ export default function Referral({ formData, handleChange }) {
               name="physician"
               value={formData.physician}
               onChange={handleChange}
+              className={errors.physician ? 'error' : ''}
               required
             />
+            {errors.physician && <p className="error-text">{errors.physician}</p>}
           </div>
 
           <div className="form-group">
@@ -53,8 +57,10 @@ export default function Referral({ formData, handleChange }) {
               name="clinic"
               value={formData.clinic}
               onChange={handleChange}
+              className={errors.clinic ? 'error' : ''}
               required
             />
+            {errors.clinic && <p className="error-text">{errors.clinic}</p>}
           </div>
 
           <div className="form-group full-width">
@@ -64,8 +70,10 @@ export default function Referral({ formData, handleChange }) {
               name="referralFile"
               accept=".pdf,.jpg,.png"
               onChange={handleChange}
+              className={errors.referralFile ? 'error' : ''}
               required
             />
+            {errors.referralFile && <p className="error-text">{errors.referralFile}</p>}
           </div>
         </>
       )}

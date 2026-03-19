@@ -1,8 +1,8 @@
 
-export default function Consent({ formData, handleChange }) {
-
+export default function Consent({ formData, handleChange, errors }) {
   return (
     <div className="form-grid booking-form">
+
       <div className="form-group full-width">
         <label className="checkbox-label">
           <input
@@ -12,7 +12,6 @@ export default function Consent({ formData, handleChange }) {
             onChange={handleChange}
           />
           I consent to the collection and use of my personal information
-          for the purpose of booking and managing my X-ray appointments.
         </label>
       </div>
 
@@ -51,6 +50,9 @@ export default function Consent({ formData, handleChange }) {
           I agree to the cancellation policy.
         </label>
       </div>
+      {errors.consentGroup && (
+        <p className="error-text">{errors.consentGroup}</p>
+      )}
     </div>
   );
 }
