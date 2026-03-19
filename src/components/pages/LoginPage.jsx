@@ -376,7 +376,7 @@ export default function LoginPage({ onLogin, onGoToRegister }) {
         <div className="login-panel">
           <div className="panel-logo">
             <div className="panel-logo-icon">🩻</div>
-            <span className="panel-logo-text">XRAY Portal</span>
+            <span className="panel-logo-text">London X-Ray</span>
           </div>
           <div className="panel-body">
             <h1 className="panel-heading">Your health,<br />your access.</h1>

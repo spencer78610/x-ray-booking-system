@@ -3,6 +3,7 @@ import LoginPage from './components/pages/LoginPage';
 import CreateAccount from './components/pages/CreateAccount';
 import BookingForm from './components/pages/BookingForm';
 import ProfilePage from './components/pages/ProfilePage';
+import CancelReschedule from './components/Features/Booking/CancelReschedule';
 import './App.css';
 
 // Pages folder contains main page components.
@@ -11,6 +12,7 @@ import './App.css';
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [page, setPage] = useState('login');
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
 
 
   // Logged in → go to profile
@@ -49,9 +51,23 @@ return (
         user={currentUser}
         onLogout={() => setPage('login')}
         onBookAppointment={() => setPage('booking')}
+        onReschedule={(appt) => { setSelectedAppointment(appt); setPage('reschedule'); }}
       />
     );
   }
+  if (page === 'reschedule') {
+  return (
+    <CancelReschedule
+      formData={selectedAppointment}
+      onReschedule={(newDate, newTime) => {
+        // TODO: update appointment in Firestore
+        setPage('profile');
+      }}
+      onCancel={() => setPage('profile')}
+      onGoToProfile={() => setPage('profile')}
+    />
+  );
+}
 
   return (
         <LoginPage

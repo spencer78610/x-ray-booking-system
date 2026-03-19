@@ -6,7 +6,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./ProfilePage.css";
 
 
-const ProfilePage = ({ user, onLogout, onBookAppointment }) => {
+const ProfilePage = ({ user, onLogout, onBookAppointment, onReschedule }) => {
 
   const [profile, setProfile] = useState({});
   const [formData, setFormData] = useState({});
@@ -85,8 +85,9 @@ const handleLogout = async () => {
   }
 };
 
+// Update handleReschedule:
 const handleReschedule = (appt) => {
-  console.log("Reschedule appointment:", appt);
+      onReschedule(appt);
 };
 
   if (loading) {
