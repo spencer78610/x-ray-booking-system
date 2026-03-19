@@ -231,6 +231,10 @@
   background: #d1fae5;
   color: #065f46;
 }
+.appt-status.cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
 
 .appt-status.pending {
   background: #fef3c7;
@@ -279,6 +283,23 @@
   transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(26, 107, 204, 0.4);
   color: white;
+}
+.btn-reschedule {
+  background: linear-gradient(135deg, #1a3c6e, #1a6bcc);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 0.83rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-reschedule:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
 }
 
 .btn-primary-custom:disabled {
