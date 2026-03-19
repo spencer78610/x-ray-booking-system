@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { auth, db } from "../../firebase";
 import { signOut } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./ProfilePage.css";
 
@@ -35,7 +35,10 @@ useEffect(() => {
       setProfile(defaults);
       setFormData(defaults);
       }
-      setAppointments([]);
+      const apptQuery = query(collection(db, "appointments"), where("uid", "==", user.uid));
+      const apptSnap = await getDocs(apptQuery);
+      const appts = apptSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setAppointments(appts);
     } catch (err) {
       console.error("Error fetching profile:", err);
     } finally {

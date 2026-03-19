@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "../../firebase";
 import PatientInfo from '../Features/Booking/PatientInfo';
 import ExamDetails from '../Features/Booking/ExamDetails';
 import Referral from '../Features/Booking/Referral';
@@ -177,10 +179,24 @@ function BookingForm({ user, onLogout, onGoToProfile }) {
     setStep(6);
   };
 
-  const confirmSubmission = () => {
-    console.log("FINAL SUBMISSION:", formData);
-    setStep(7);
-  };
+const confirmSubmission = async () => {
+  console.log("FINAL SUBMISSION:", formData);
+  
+  // Save appointment to Firestore
+  if (user?.uid) {
+    await addDoc(collection(db, "appointments"), {
+      uid: user.uid,
+      type: formData.specificExam,
+      date: formData.appointmentDate,
+      time: formData.appointmentTime,
+      doctor: "",
+      status: "Confirmed",
+      createdAt: new Date().toISOString(),
+    });
+  }
+  
+  setStep(7);
+};
 
   const handleReschedule = (newDate, newTime) => {
     setFormData(prev => ({ ...prev, appointmentDate: newDate, appointmentTime: newTime }));
