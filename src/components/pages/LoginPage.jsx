@@ -1,6 +1,7 @@
-
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../firebase";
+
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@500&display=swap');
@@ -319,7 +320,7 @@ const styles = `
   }
 `;
 
-export default function LoginPage({ onLogin }) {
+export default function LoginPage({ onLogin, onGoToRegister }) {
   const [role, setRole] = useState('patient');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -328,16 +329,6 @@ export default function LoginPage({ onLogin }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const navigate = useNavigate();
-
-  const handleLogin = (user) => {
-    onLogin(user); // still call the prop to set currentUser in App
-    if (user.role === 'patient') {
-      navigate('/profile');
-    }  else {
-      navigate('/booking');
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -351,12 +342,30 @@ export default function LoginPage({ onLogin }) {
 
     setLoading(true);
 
-    // TODO: Replace with your real Firebase auth call
-    setTimeout(() => {
+    try {
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      setSuccess(`Logged in as ${role === 'patient' ? 'Patient' : 'Staff Member'}.`);
+      if (onLogin) onLogin({ email, role, uid: result.user.uid });
+    } catch (err) {
+      switch (err.code) {
+        case 'auth/user-not-found':
+          setError('No account found with this email.');
+          break;
+        case 'auth/wrong-password':
+          setError('Incorrect password. Please try again.');
+          break;
+        case 'auth/invalid-email':
+          setError('Please enter a valid email address.');
+          break;
+        case 'auth/too-many-requests':
+          setError('Too many failed attempts. Please try again later.');
+          break;
+        default:
+          setError('Login failed. Please check your credentials.');
+      }
+    } finally {
       setLoading(false);
-      const user = { email, role };
-      handleLogin(user); // ← call handleLogin instead of onLogin directly
-    }, 1200);
+    }
   };
 
   return (
@@ -367,7 +376,7 @@ export default function LoginPage({ onLogin }) {
         <div className="login-panel">
           <div className="panel-logo">
             <div className="panel-logo-icon">🩻</div>
-            <span className="panel-logo-text">XRAY Portal</span>
+            <span className="panel-logo-text">London X-Ray</span>
           </div>
           <div className="panel-body">
             <h1 className="panel-heading">Your health,<br />your access.</h1>
@@ -382,6 +391,28 @@ export default function LoginPage({ onLogin }) {
 
         <div className="login-form-side">
           <div className="login-card">
+
+            {/* Top row with Create Account button */}
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
+              <button
+                type="button"
+                onClick={onGoToRegister}
+                style={{
+                  background: "transparent",
+                  border: "1.5px solid #0a6e8a",
+                  color: "#0a6e8a",
+                  borderRadius: "8px",
+                  padding: "7px 16px",
+                  fontSize: "13px",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Create Account
+              </button>
+            </div>
+
             <h2 className="login-card-title">Welcome back</h2>
             <p className="login-card-sub">Sign in to continue to your portal</p>
 
@@ -410,7 +441,7 @@ export default function LoginPage({ onLogin }) {
               <div className="form-group">
                 <label className="form-label">Email address</label>
                 <div className="form-input-wrap">
-                  <span className="form-input-icon"> </span> 
+                  <span className="form-input-icon">✉</span>
                   <input
                     className="form-input"
                     type="email"
@@ -425,7 +456,7 @@ export default function LoginPage({ onLogin }) {
               <div className="form-group">
                 <label className="form-label">Password</label>
                 <div className="form-input-wrap">
-                  <span className="form-input-icon"></span>
+                  <span className="form-input-icon">🔒</span>
                   <input
                     className="form-input"
                     type="password"
@@ -455,11 +486,9 @@ export default function LoginPage({ onLogin }) {
             </form>
 
             <p className="login-divider">
-              {role === 'patient' ? (
-                <>New patient? <a href="/register" className="form-forgot">Create an account</a></>
-              ) : (
-                'Staff access issues? Contact your IT administrator.'
-              )}
+              {role === 'patient'
+                ? 'New patient? Click "Create Account" to register.'
+                : 'Staff access issues? Contact your IT administrator.'}
             </p>
           </div>
         </div>

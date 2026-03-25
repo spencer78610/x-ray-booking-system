@@ -1,28 +1,91 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './components/pages/LoginPage';
 import CreateAccount from './components/pages/CreateAccount';
 import BookingForm from './components/pages/BookingForm';
 import ProfilePage from './components/pages/ProfilePage';
+import CancelReschedule from './components/Features/Booking/CancelReschedule';
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "./firebase";
 import './App.css';
+
+// Pages folder contains main page components.
+// Features folder contains smaller reusable components used within pages.
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [page, setPage] = useState('login');
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
 
+
+  // Logged in → go to profile
   const handleLogin = (user) => {
     setCurrentUser(user);
+    setPage('profile');
   };
-  
+  // Signed up → book first
+    const handleAccountCreated = (user) => {
+      setCurrentUser(user);
+      setPage('booking');
+    };
 
+  if (page === 'register') {
+    return (
+      <CreateAccount
+        onAccountCreated={handleAccountCreated}
+        onGoToLogin={() => setPage('login')}
+      />
+    );
+  }
+
+  if (page === 'booking') {
+return (
+      <BookingForm
+        user={currentUser}
+        onLogout={() => setPage('login')}
+        onGoToProfile={() => setPage('profile')}
+      />
+    );
+  }
+
+  if (page === 'profile') {
+        return (
+      <ProfilePage
+        user={currentUser}
+        onLogout={() => setPage('login')}
+        onBookAppointment={() => setPage('booking')}
+        onReschedule={(appt) => { setSelectedAppointment(appt); setPage('reschedule'); }}
+      />
+    );
+  }
+  if (page === 'reschedule') {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
-        <Route path="/register" element={<CreateAccount />} />
-        <Route path="/booking" element={currentUser ? <BookingForm user={currentUser} /> : <Navigate to="/login" replace />} />
-        <Route path="/profile" element={currentUser ? <ProfilePage user={currentUser} /> : <Navigate to="/login" replace />} />
-      </Routes>
-    </Router>
+    <CancelReschedule
+      formData={selectedAppointment}
+      onReschedule={async (newDate, newTime) => {
+        // Update appointment in Firestore
+        if (selectedAppointment?.id) {
+          const apptRef = doc(db, "appointments", selectedAppointment.id);
+          await updateDoc(apptRef, { date: newDate, time: newTime });
+        }
+        setPage('profile');
+      }}
+      onCancel={async () => {
+        // Delete or mark as cancelled in Firestore
+        if (selectedAppointment?.id) {
+          const apptRef = doc(db, "appointments", selectedAppointment.id);
+          await updateDoc(apptRef, { status: "Cancelled" });
+        }
+        setPage('profile');
+      }}
+      onGoToProfile={() => setPage('profile')}
+    />
+  );
+}
+  return (
+        <LoginPage
+      onLogin={handleLogin}
+      onGoToRegister={() => setPage('register')}
+    />
+    
   );
 }
