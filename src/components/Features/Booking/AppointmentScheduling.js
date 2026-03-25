@@ -3,8 +3,6 @@ import { useState, useEffect } from 'react';
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
-export default function AppointmentScheduling({ formData, handleChange }) {
-
   const clinicHours = {
     "440 Boler Road": {
       mon: ["07:00", "21:00"],
@@ -48,15 +46,19 @@ export default function AppointmentScheduling({ formData, handleChange }) {
     }
   };
 
-  const bookedSlots = ["09:00 AM", "09:30 AM"]; // Example of booked slots for demonstration
-  const isBooked = (time) => bookedSlots.includes(time);
   const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
-  const getDayKey = (dateString) => {
+const getDayKey = (dateString) => {
     const [year, month, day] = dateString.split("-");
     const date = new Date(year, month - 1, day);
     return days[date.getDay()];
   };
+
+
+export default function AppointmentScheduling({ formData, handleChange, errors }) {
+
+  const bookedSlots = ["09:00 AM", "09:30 AM"]; // Example of booked slots for demonstration
+  const isBooked = (time) => bookedSlots.includes(time);
 
   const isDateAvailable = (date) => {
     if (!formData.appointmentLocation) return false;
@@ -126,6 +128,7 @@ export default function AppointmentScheduling({ formData, handleChange }) {
           name="appointmentLocation"
           value={formData.appointmentLocation}
           onChange={handleChange}
+          className={errors.appointmentLocation ? 'error' : ''}
         >
           <option value="">Select a location</option>
           <option value="440 Boler Road">440 Boler Road</option>
@@ -134,6 +137,7 @@ export default function AppointmentScheduling({ formData, handleChange }) {
           <option value="1657 Dundas Street East">1657 Dundas Street East</option>
           <option value="3209 Wonderland Road South">3209 Wonderland Road South</option>
         </select>
+        {errors.appointmentLocation && <p className="error-text">{errors.appointmentLocation}</p>}
       </div>
 
       <div className="form-group">
@@ -150,14 +154,19 @@ export default function AppointmentScheduling({ formData, handleChange }) {
           tileDisabled={({ date }) =>
             date < new Date() || !isDateAvailable(date)
           }
+          className={errors.appointmentDate ? 'error' : ''}
         />
+
+        {errors.appointmentDate && (
+          <p className="error-text">{errors.appointmentDate}</p>
+        )}
       </div>
 
       {availableSlots.length > 0 && (
         <div className="form-group full-width">
           <label>Available Time Slots</label>
 
-          <div className="time-slots">
+          <div className={`time-slots ${errors.appointmentTime ? 'error' : ''}`}>
 
             {availableSlots.map((slot) => {
 
@@ -180,7 +189,9 @@ export default function AppointmentScheduling({ formData, handleChange }) {
             })}
 
           </div>
-
+            {errors.appointmentTime && (
+                    <p className="error-text">{errors.appointmentTime}</p>
+                  )}
         </div>
       )}
 
