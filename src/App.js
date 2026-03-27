@@ -3,6 +3,7 @@ import LoginPage from './components/pages/LoginPage';
 import CreateAccount from './components/pages/CreateAccount';
 import BookingForm from './components/pages/BookingForm';
 import ProfilePage from './components/pages/ProfilePage';
+import StaffPage from './components/pages/StaffPage';
 import CancelReschedule from './components/Features/Booking/CancelReschedule';
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "./firebase";
@@ -16,17 +17,21 @@ export default function App() {
   const [page, setPage] = useState('login');
   const [selectedAppointment, setSelectedAppointment] = useState(null);
 
-
-  // Logged in → go to profile
+  // Route based on role after login
   const handleLogin = (user) => {
     setCurrentUser(user);
-    setPage('profile');
+    if (user.role === 'staff') {
+      setPage('staff');
+    } else {
+      setPage('profile');
+    }
   };
-  // Signed up → book first
-    const handleAccountCreated = (user) => {
-      setCurrentUser(user);
-      setPage('booking');
-    };
+
+  // New patients go to booking first
+  const handleAccountCreated = (user) => {
+    setCurrentUser(user);
+    setPage('booking');
+  };
 
   if (page === 'register') {
     return (
@@ -38,7 +43,12 @@ export default function App() {
   }
 
   if (page === 'booking') {
-return (
+    // Block staff from booking page
+    if (currentUser?.role === 'staff') {
+      setPage('staff');
+      return null;
+    }
+    return (
       <BookingForm
         user={currentUser}
         onLogout={() => setPage('login')}
@@ -48,7 +58,12 @@ return (
   }
 
   if (page === 'profile') {
-        return (
+    // Block staff from patient profile
+    if (currentUser?.role === 'staff') {
+      setPage('staff');
+      return null;
+    }
+    return (
       <ProfilePage
         user={currentUser}
         onLogout={() => setPage('login')}
@@ -57,35 +72,53 @@ return (
       />
     );
   }
+
   if (page === 'reschedule') {
+    // Block staff from reschedule page
+    if (currentUser?.role === 'staff') {
+      setPage('staff');
+      return null;
+    }
+    return (
+      <CancelReschedule
+        formData={selectedAppointment}
+        onReschedule={async (newDate, newTime) => {
+          if (selectedAppointment?.id) {
+            const apptRef = doc(db, "appointments", selectedAppointment.id);
+            await updateDoc(apptRef, { date: newDate, time: newTime });
+          }
+          setPage('profile');
+        }}
+        onCancel={async () => {
+          if (selectedAppointment?.id) {
+            const apptRef = doc(db, "appointments", selectedAppointment.id);
+            await updateDoc(apptRef, { status: "Cancelled" });
+          }
+          setPage('profile');
+        }}
+        onGoToProfile={() => setPage('profile')}
+      />
+    );
+  }
+
+  if (page === 'staff') {
+    // Block patients from staff page
+    if (currentUser?.role === 'patient') {
+      setPage('profile');
+      return null;
+    }
+    return (
+      <StaffPage
+        user={currentUser}
+        onLogout={() => setPage('login')}
+      />
+    );
+  }
+
   return (
-    <CancelReschedule
-      formData={selectedAppointment}
-      onReschedule={async (newDate, newTime) => {
-        // Update appointment in Firestore
-        if (selectedAppointment?.id) {
-          const apptRef = doc(db, "appointments", selectedAppointment.id);
-          await updateDoc(apptRef, { date: newDate, time: newTime });
-        }
-        setPage('profile');
-      }}
-      onCancel={async () => {
-        // Delete or mark as cancelled in Firestore
-        if (selectedAppointment?.id) {
-          const apptRef = doc(db, "appointments", selectedAppointment.id);
-          await updateDoc(apptRef, { status: "Cancelled" });
-        }
-        setPage('profile');
-      }}
-      onGoToProfile={() => setPage('profile')}
-    />
-  );
-}
-  return (
-        <LoginPage
+    <LoginPage
       onLogin={handleLogin}
       onGoToRegister={() => setPage('register')}
     />
-    
   );
 }
