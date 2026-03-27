@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../firebase";
-
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../../firebase";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@500&display=swap');
@@ -71,9 +71,7 @@ const styles = `
     letter-spacing: 0.3px;
   }
 
-  .panel-body {
-    z-index: 1;
-  }
+  .panel-body { z-index: 1; }
 
   .panel-heading {
     font-family: 'Playfair Display', serif;
@@ -164,9 +162,7 @@ const styles = `
     z-index: 1;
   }
 
-  .role-toggle-btn.active {
-    color: #0d3d56;
-  }
+  .role-toggle-btn.active { color: #0d3d56; }
 
   .role-toggle-slider {
     position: absolute;
@@ -179,13 +175,9 @@ const styles = `
     transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
   }
 
-  .role-toggle-slider.staff {
-    transform: translateX(calc(100% + 8px));
-  }
+  .role-toggle-slider.staff { transform: translateX(calc(100% + 8px)); }
 
-  .form-group {
-    margin-bottom: 18px;
-  }
+  .form-group { margin-bottom: 18px; }
 
   .form-label {
     display: block;
@@ -195,9 +187,7 @@ const styles = `
     margin-bottom: 6px;
   }
 
-  .form-input-wrap {
-    position: relative;
-  }
+  .form-input-wrap { position: relative; }
 
   .form-input-icon {
     position: absolute;
@@ -228,9 +218,7 @@ const styles = `
     box-shadow: 0 0 0 3px rgba(10,110,138,0.1);
   }
 
-  .form-input::placeholder {
-    color: #aabbc7;
-  }
+  .form-input::placeholder { color: #aabbc7; }
 
   .form-row {
     display: flex;
@@ -255,15 +243,13 @@ const styles = `
   }
 
   .form-forgot {
-    font-size: 18px;
+    font-size: 13px;
     color: #0a6e8a;
     text-decoration: none;
     font-weight: 500;
   }
 
-  .form-forgot:hover {
-    text-decoration: underline;
-  }
+  .form-forgot:hover { text-decoration: underline; }
 
   .login-btn {
     width: 100%;
@@ -306,7 +292,7 @@ const styles = `
 
   .login-divider {
     text-align: center;
-    font-size: 18px;
+    font-size: 13px;
     color: #9bb0be;
     margin: 20px 0 0;
   }
@@ -329,7 +315,6 @@ export default function LoginPage({ onLogin, onGoToRegister }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -343,9 +328,26 @@ export default function LoginPage({ onLogin, onGoToRegister }) {
     setLoading(true);
 
     try {
+      // Sign in with Firebase Auth
       const result = await signInWithEmailAndPassword(auth, email, password);
-      setSuccess(`Logged in as ${role === 'patient' ? 'Patient' : 'Staff Member'}.`);
-      if (onLogin) onLogin({ email, role, uid: result.user.uid });
+      const uid = result.user.uid;
+
+      // Fetch real role from Firestore
+      const docRef = doc(db, "patients", uid);
+      const docSnap = await getDoc(docRef);
+      const userData = docSnap.exists() ? docSnap.data() : {};
+      const realRole = userData.role || role;
+
+      // Verify role matches what user selected
+      if (realRole !== role) {
+        setError(`This account is not registered as a ${role}. Please select the correct role.`);
+        setLoading(false);
+        return;
+      }
+
+      setSuccess(`Logged in as ${realRole === 'patient' ? 'Patient' : 'Staff Member'}.`);
+      if (onLogin) onLogin({ email, role: realRole, uid });
+
     } catch (err) {
       switch (err.code) {
         case 'auth/user-not-found':
@@ -372,7 +374,6 @@ export default function LoginPage({ onLogin, onGoToRegister }) {
     <>
       <style>{styles}</style>
       <div className="login-root">
-
         <div className="login-panel">
           <div className="panel-logo">
             <div className="panel-logo-icon">🩻</div>
@@ -392,7 +393,6 @@ export default function LoginPage({ onLogin, onGoToRegister }) {
         <div className="login-form-side">
           <div className="login-card">
 
-            {/* Top row with Create Account button */}
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
               <button
                 type="button"
@@ -492,7 +492,6 @@ export default function LoginPage({ onLogin, onGoToRegister }) {
             </p>
           </div>
         </div>
-
       </div>
     </>
   );
