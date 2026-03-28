@@ -1,13 +1,12 @@
-// import React from 'react';
-// import StaffDashboard from '../components/Features/Staff/StaffDashboard';
+import React from 'react';
+import StaffDashboard from '../Features/Staff/StaffDashboard';
 
-// function StaffPage() {
-//   return (
-//     <div>
-//       <h1>Staff Section</h1>
-//       <StaffDashboard />
-//     </div>
-//   );
-// }
+function StaffPage({ user, onLogout }) {
+  return (
+    <div>
+      <StaffDashboard user={user} onLogout={onLogout} />
+    </div>
+  );
+}
 
-// export default StaffPage;
+export default StaffPage;
