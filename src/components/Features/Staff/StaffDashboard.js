@@ -3,6 +3,7 @@ import UpcomingAppointments from './UpcomingAppointments';
 import EditAppointment from './EditAppointment';
 import BlockTimeSlots from './BlockTimeSlots';
 import CompletedForms from './CompletedForms';
+import StaffBooking from './StaffBooking';
 import './StaffStyles.css';
 
 function StaffDashboard({ user, onLogout }) {
@@ -59,6 +60,14 @@ function StaffDashboard({ user, onLogout }) {
               Block Time Slots
             </button>
           </li>
+        <li>
+          <button
+            className={`staff-tab ${activeTab === 'booking' ? 'active' : ''}`}
+            onClick={() => setActiveTab('booking')}
+          >
+            Book Appointment
+          </button>
+        </li>
           <li>
             <button
               className={`staff-tab ${activeTab === 'forms' ? 'active' : ''}`}
@@ -74,7 +83,9 @@ function StaffDashboard({ user, onLogout }) {
           {activeTab === 'upcoming' && <UpcomingAppointments />}
           {activeTab === 'edit' && <EditAppointment />}
           {activeTab === 'block' && <BlockTimeSlots />}
+          {activeTab === 'booking' && <StaffBooking />}
           {activeTab === 'forms' && <CompletedForms />}
+
         </div>
       </div>
     </div>
