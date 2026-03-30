@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, addDoc, query, orderBy } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db } from '../../../firebase';
 
 function ExamResults() {
@@ -13,7 +12,7 @@ function ExamResults() {
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-  const [formData, setFormData] = useState({ title: '', notes: '', file: null });
+  const [formData, setFormData] = useState({ title: '', notes: '' });
 
   useEffect(() => {
     const fetchPatients = async () => {
@@ -56,40 +55,28 @@ function ExamResults() {
   const handleSubmit = async () => {
     if (!selectedPatient) { setErrorMsg('Please select a patient.'); return; }
     if (!formData.title) { setErrorMsg('Please enter a result title.'); return; }
-    if (!formData.notes && !formData.file) { setErrorMsg('Please add notes or upload a file.'); return; }
+    if (!formData.notes) { setErrorMsg('Please enter result notes.'); return; }
 
     setSaving(true);
     setErrorMsg('');
     try {
-      let fileURL = null;
-      let fileName = null;
-
-      // Upload file to Firebase Storage if provided
-      if (formData.file) {
-        const storage = getStorage();
-        const storageRef = ref(storage, `examResults/${selectedPatient.id}/${Date.now()}_${formData.file.name}`);
-        await uploadBytes(storageRef, formData.file);
-        fileURL = await getDownloadURL(storageRef);
-        fileName = formData.file.name;
-      }
-
       const newResult = {
         title: formData.title,
-        notes: formData.notes || '',
-        fileURL: fileURL || null,
-        fileName: fileName || null,
+        notes: formData.notes,
         createdAt: new Date().toISOString(),
         uploadedBy: 'staff',
       };
-
-      await addDoc(collection(db, 'patients', selectedPatient.id, 'examResults'), newResult);
-      setResults(prev => [{ id: Date.now().toString(), ...newResult }, ...prev]);
-      setFormData({ title: '', notes: '', file: null });
-      setSuccessMsg('Exam result uploaded successfully!');
+      const docRef = await addDoc(
+        collection(db, 'patients', selectedPatient.id, 'examResults'),
+        newResult
+      );
+      setResults(prev => [{ id: docRef.id, ...newResult }, ...prev]);
+      setFormData({ title: '', notes: '' });
+      setSuccessMsg('Exam result added successfully!');
       setTimeout(() => setSuccessMsg(''), 3000);
     } catch (err) {
-      console.error('Error uploading result:', err);
-      setErrorMsg('Failed to upload result. Please try again.');
+      console.error('Error adding result:', err);
+      setErrorMsg('Failed to add result. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -101,7 +88,7 @@ function ExamResults() {
       {errorMsg && <div className="staff-alert-error">⚠️ {errorMsg}</div>}
 
       <h5 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-dark)', marginBottom: 20 }}>
-        Upload Exam Results
+        Add Exam Results
       </h5>
 
       {/* Patient Search */}
@@ -129,6 +116,11 @@ function ExamResults() {
             ))}
           </div>
         )}
+        {showDropdown && searchQuery && filteredPatients.length === 0 && (
+          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'white', border: '1.5px solid var(--border)', borderRadius: 8, padding: '12px 14px', fontSize: 14, color: 'var(--text-muted)', zIndex: 100 }}>
+            No patients found.
+          </div>
+        )}
       </div>
 
       {/* Selected patient */}
@@ -144,32 +136,35 @@ function ExamResults() {
         </div>
       )}
 
-      {/* Upload form */}
+      {/* Form */}
       {selectedPatient && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-            <div className="staff-form-group">
-              <label className="staff-label">Result Title</label>
-              <input type="text" className="staff-input" placeholder="e.g. Chest X-Ray Results"
-                value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
-            </div>
-            <div className="staff-form-group">
-              <label className="staff-label">Upload PDF (optional)</label>
-              <input type="file" accept=".pdf,.jpg,.png" className="staff-input"
-                onChange={e => setFormData({ ...formData, file: e.target.files[0] })} />
-            </div>
+          <div className="staff-form-group">
+            <label className="staff-label">Result Title</label>
+            <input
+              type="text"
+              className="staff-input"
+              placeholder="e.g. Chest X-Ray Results — March 2026"
+              value={formData.title}
+              onChange={e => setFormData({ ...formData, title: e.target.value })}
+            />
           </div>
           <div className="staff-form-group">
-            <label className="staff-label">Notes / Result Text (optional)</label>
-            <textarea className="staff-input" rows={3} placeholder="Enter exam result details..."
-              value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })}
-              style={{ resize: 'vertical' }} />
+            <label className="staff-label">Result Notes</label>
+            <textarea
+              className="staff-input"
+              rows={4}
+              placeholder="Enter the exam result details here..."
+              value={formData.notes}
+              onChange={e => setFormData({ ...formData, notes: e.target.value })}
+              style={{ resize: 'vertical' }}
+            />
           </div>
           <button className="staff-btn" onClick={handleSubmit} disabled={saving} style={{ marginBottom: 28 }}>
-            {saving ? 'Uploading...' : 'Upload Result'}
+            {saving ? 'Saving...' : 'Add Result'}
           </button>
 
-          {/* Existing results */}
+          {/* Previous results */}
           <hr style={{ border: 'none', borderTop: '1.5px solid var(--border)', marginBottom: 20 }} />
           <h5 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-dark)', marginBottom: 16 }}>
             Previous Results for {selectedPatient.fullName}
@@ -180,7 +175,7 @@ function ExamResults() {
             <div className="staff-empty">
               <div className="staff-empty-icon">🔬</div>
               <h5>No results yet</h5>
-              <p>Upload the first exam result above.</p>
+              <p>Add the first exam result above.</p>
             </div>
           ) : (
             <table className="staff-table">
@@ -188,20 +183,14 @@ function ExamResults() {
                 <tr>
                   <th>Title</th>
                   <th>Notes</th>
-                  <th>File</th>
-                  <th>Date</th>
+                  <th>Date Added</th>
                 </tr>
               </thead>
               <tbody>
                 {results.map(result => (
                   <tr key={result.id}>
-                    <td>{result.title}</td>
-                    <td>{result.notes || '—'}</td>
-                    <td>
-                      {result.fileURL
-                        ? <a href={result.fileURL} target="_blank" rel="noreferrer" className="staff-btn" style={{ textDecoration: 'none', fontSize: 12 }}>View File</a>
-                        : '—'}
-                    </td>
+                    <td style={{ fontWeight: 500 }}>{result.title}</td>
+                    <td style={{ maxWidth: 300, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{result.notes}</td>
                     <td>{new Date(result.createdAt).toLocaleDateString()}</td>
                   </tr>
                 ))}
