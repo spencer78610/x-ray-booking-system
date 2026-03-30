@@ -4,6 +4,7 @@ import EditAppointment from './EditAppointment';
 import BlockTimeSlots from './BlockTimeSlots';
 import CompletedForms from './CompletedForms';
 import StaffBooking from './StaffBooking';
+import ExamResults from './ExamResults';
 import './StaffStyles.css';
 
 function StaffDashboard({ user, onLogout }) {
@@ -76,6 +77,12 @@ function StaffDashboard({ user, onLogout }) {
               Completed Forms
             </button>
           </li>
+          <li>
+          <button className={`staff-tab ${activeTab === 'results' ? 'active' : ''}`}
+            onClick={() => setActiveTab('results')}>
+            Exam Results
+          </button>
+        </li>
         </ul>
 
         {/* Tab Content */}
@@ -85,6 +92,7 @@ function StaffDashboard({ user, onLogout }) {
           {activeTab === 'block' && <BlockTimeSlots />}
           {activeTab === 'booking' && <StaffBooking />}
           {activeTab === 'forms' && <CompletedForms />}
+          {activeTab === 'results' && <ExamResults />}
 
         </div>
       </div>

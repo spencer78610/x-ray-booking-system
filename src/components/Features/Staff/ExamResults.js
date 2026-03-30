@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, addDoc, query, orderBy } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db } from '../../../../firebase';
+import { db } from '../../../firebase';
 
 function ExamResults() {
   const [patients, setPatients] = useState([]);
