@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { auth, db } from "../../firebase";
 import { signOut } from "firebase/auth";
+import ExamResultsTab from './ExamResultsTab';
 import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./ProfilePage.css";
@@ -163,6 +164,14 @@ const handleReschedule = (appt) => {
               Edit Profile
             </button>
           </li>
+          <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === "results" ? "active" : ""}`}
+            onClick={() => setActiveTab("results")}
+          >
+            Exam Results
+          </button>
+        </li>
         </ul>
 
         {/* Personal Info Tab */}
@@ -293,6 +302,7 @@ const handleReschedule = (appt) => {
             </div>
           </div>
         )}
+          {activeTab === "results" && <ExamResultsTab user={user} />}
       </div>
     </div>
   );
