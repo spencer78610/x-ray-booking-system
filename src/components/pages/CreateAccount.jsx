@@ -523,6 +523,7 @@ export default function CreateAccountPage({ onAccountCreated, onGoToLogin }) {
                 </div>
               </div>
 
+
               {role === 'staff' && (
                 <>
                   <div className="ca-group">
