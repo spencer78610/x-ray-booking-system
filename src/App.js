@@ -30,7 +30,7 @@ export default function App() {
   // New patients go to booking first
   const handleAccountCreated = (user) => {
     setCurrentUser(user);
-    setPage('booking');
+    setPage('profile');
   };
 
   if (page === 'register') {

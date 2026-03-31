@@ -3,13 +3,13 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBJXVAcwZ5Xdp4P01IOPUitqkL1YO54AXc",
-  authDomain: "x-ray-booking-system.firebaseapp.com",
-  projectId: "x-ray-booking-system",
-  storageBucket: "x-ray-booking-system.firebasestorage.app",
-  messagingSenderId: "243527174518",
-  appId: "1:243527174518:web:22fd4f7358715f38ef9257",
-  measurementId: "G-5PC9LE3RG7"
+  apiKey: "AIzaSyDvq4Dna2lLcxT_K4T2bH5UoE_S3ojGgTM",
+  authDomain: "london-x-rays.firebaseapp.com",
+  projectId: "london-x-rays",
+  storageBucket: "london-x-rays.firebasestorage.app",
+  messagingSenderId: "164051064622",
+  appId: "1:164051064622:web:e9bbba86ba7645a0564cbf",
+  measurementId: "G-MQVNQ31B75"
 };
 
 const app = initializeApp(firebaseConfig);

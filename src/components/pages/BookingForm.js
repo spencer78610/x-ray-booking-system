@@ -81,55 +81,55 @@ function BookingForm({ user, onLogout, onGoToProfile }) {
       case 1:
         return (
           <FormStep stepNumber={1} totalSteps={steps.length} nextStep={nextStep}>
-            <PatientInfo formData={formData} handleChange={handleChange} />
+            <PatientInfo formData={formData} handleChange={handleChange} errors={{}} />
           </FormStep>
         );
       case 2:
         return (
           <FormStep stepNumber={2} totalSteps={steps.length} nextStep={nextStep} prevStep={prevStep}>
-            <ExamDetails formData={formData} handleChange={handleChange} />
+            <ExamDetails formData={formData} handleChange={handleChange} errors={{}} />
           </FormStep>
         );
       case 3:
         return (
           <FormStep stepNumber={3} totalSteps={steps.length} nextStep={nextStep} prevStep={prevStep}>
-            <Referral formData={formData} handleChange={handleChange} />
+            <Referral formData={formData} handleChange={handleChange} errors={{}} />
           </FormStep>
         );
       case 4:
         return (
           <FormStep stepNumber={4} totalSteps={steps.length} nextStep={nextStep} prevStep={prevStep}>
-            <AppointmentScheduling formData={formData} handleChange={handleChange} />
+            <AppointmentScheduling formData={formData} handleChange={handleChange} errors={{}} />
           </FormStep>
         );
       case 5:
         return (
           <FormStep stepNumber={5} totalSteps={steps.length} handleSubmit={handleSubmit} prevStep={prevStep}>
-            <Consent formData={formData} handleChange={handleChange} />
+            <Consent formData={formData} handleChange={handleChange} errors={{}} />
           </FormStep>
         );
       case 6:
         return (
           <>
-           <div className="booking-form">
-            <h2>Confirm Your Appointment</h2>
-            <div className="confirmation-box">
-              <p><strong>Name:</strong> {formData.firstName} {formData.lastName}</p>
-              <p><strong>Email:</strong> {formData.email}</p>
-              <p><strong>Exam:</strong> {formData.specificExam}</p>
-              <p><strong>Date:</strong> {formData.appointmentDate}</p>
-              <p><strong>Time:</strong> {formData.appointmentTime || "Flexible"}</p>
-              <p><strong>Location:</strong> {formData.appointmentLocation}</p>
+            <div className="booking-form">
+              <h2>Confirm Your Appointment</h2>
+              <div className="confirmation-box">
+                <p><strong>Name:</strong> {formData.firstName} {formData.lastName}</p>
+                <p><strong>Email:</strong> {formData.email}</p>
+                <p><strong>Exam:</strong> {formData.specificExam}</p>
+                <p><strong>Date:</strong> {formData.appointmentDate}</p>
+                <p><strong>Time:</strong> {formData.appointmentTime || "Flexible"}</p>
+                <p><strong>Location:</strong> {formData.appointmentLocation}</p>
+              </div>
+
             </div>
-            
-          </div>
-          <div className="confirmation-actions step-buttons">
+            <div className="confirmation-actions step-buttons">
               <button className="secondary-btn" onClick={() => setStep(1)}>Back</button>
               <button className="submit-btn" onClick={confirmSubmission} >Confirm Booking</button>
 
             </div>
           </>
-         
+
         );
       case 7:
         return (
@@ -146,9 +146,9 @@ function BookingForm({ user, onLogout, onGoToProfile }) {
           <>
             <CancelReschedule
               formData={formData}
-                onReschedule={handleReschedule}
-                onCancel={handleCancel}
-                onGoToProfile={onGoToProfile}
+              onReschedule={handleReschedule}
+              onCancel={handleCancel}
+              onGoToProfile={onGoToProfile}
             />
             {/* <div className='step-buttons'>
               <button onClick={handleCancel} className="cancel-btn">Cancel Appointment</button>
@@ -161,7 +161,13 @@ function BookingForm({ user, onLogout, onGoToProfile }) {
 
         );
       default:
-        return <PatientInfo />;
+        return (
+          <PatientInfo
+            formData={formData}
+            handleChange={handleChange}
+            errors={{}}
+          />
+        );
     }
   };
 
@@ -179,24 +185,24 @@ function BookingForm({ user, onLogout, onGoToProfile }) {
     setStep(6);
   };
 
-const confirmSubmission = async () => {
-  console.log("FINAL SUBMISSION:", formData);
-  
-  // Save appointment to Firestore
-  if (user?.uid) {
-    await addDoc(collection(db, "appointments"), {
-      uid: user.uid,
-      type: formData.specificExam,
-      date: formData.appointmentDate,
-      time: formData.appointmentTime,
-      doctor: "",
-      status: "Confirmed",
-      createdAt: new Date().toISOString(),
-    });
-  }
-  
-  setStep(7);
-};
+  const confirmSubmission = async () => {
+    console.log("FINAL SUBMISSION:", formData);
+
+    // Save appointment to Firestore
+    if (user?.uid) {
+      await addDoc(collection(db, "appointments"), {
+        uid: user.uid,
+        type: formData.specificExam,
+        date: formData.appointmentDate,
+        time: formData.appointmentTime,
+        doctor: "",
+        status: "Confirmed",
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    setStep(7);
+  };
 
   const handleReschedule = (newDate, newTime) => {
     setFormData(prev => ({ ...prev, appointmentDate: newDate, appointmentTime: newTime }));
