@@ -16,38 +16,38 @@ const ProfilePage = ({ user, onLogout, onBookAppointment, onReschedule }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
-  
 
-useEffect(() => {
-  const fetchProfile = async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-    try {
-      const docRef = doc(db, "patients", user.uid);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setProfile(data);
-        setFormData(data);
-      } else {
-      const defaults = { fullName: "", email: user.email || "", phone: "", dob: "", gender: "", address: "" };
-      setProfile(defaults);
-      setFormData(defaults);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
       }
-      const apptQuery = query(collection(db, "appointments"), where("uid", "==", user.uid));
-      const apptSnap = await getDocs(apptQuery);
-      const appts = apptSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setAppointments(appts);
-    } catch (err) {
-      console.error("Error fetching profile:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-  fetchProfile();
-}, [user]);
+      try {
+        const docRef = doc(db, "patients", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setProfile(data);
+          setFormData(data);
+        } else {
+          const defaults = { fullName: "", email: user.email || "", phone: "", dob: "", gender: "", address: "" };
+          setProfile(defaults);
+          setFormData(defaults);
+        }
+        const apptQuery = query(collection(db, "appointments"), where("uid", "==", user.uid));
+        const apptSnap = await getDocs(apptQuery);
+        const appts = apptSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setAppointments(appts);
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, [user]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -59,7 +59,7 @@ useEffect(() => {
     try {
       if (user) {
         const docRef = doc(db, "patients", user.uid);
-        await setDoc(docRef, formData,{ merge: true })
+        await setDoc(docRef, formData, { merge: true })
       }
       setProfile(formData);
       setActiveTab("info");
@@ -77,19 +77,19 @@ useEffect(() => {
     setActiveTab("info");
   };
 
-const handleLogout = async () => {
-  try {
-    await signOut(auth);
-    onLogout();
-  } catch (err) {
-    console.error("Logout error:", err);
-  }
-};
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      onLogout();
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  };
 
-// Update handleReschedule:
-const handleReschedule = (appt) => {
-      onReschedule(appt);
-};
+  // Update handleReschedule:
+  const handleReschedule = (appt) => {
+    onReschedule(appt);
+  };
 
   if (loading) {
     return (
@@ -118,8 +118,8 @@ const handleReschedule = (appt) => {
             </div>
             <button className="btn btn-logout" onClick={handleLogout}>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="me-2" viewBox="0 0 16 16">
-                <path fillRule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
-                <path fillRule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
+                <path fillRule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z" />
+                <path fillRule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z" />
               </svg>
               Log Out
             </button>
@@ -165,13 +165,13 @@ const handleReschedule = (appt) => {
             </button>
           </li>
           <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === "results" ? "active" : ""}`}
-            onClick={() => setActiveTab("results")}
-          >
-            Exam Results
-          </button>
-        </li>
+            <button
+              className={`nav-link ${activeTab === "results" ? "active" : ""}`}
+              onClick={() => setActiveTab("results")}
+            >
+              Exam Results
+            </button>
+          </li>
         </ul>
 
         {/* Personal Info Tab */}
@@ -213,46 +213,52 @@ const handleReschedule = (appt) => {
                 <div className="empty-icon mb-3">📅</div>
                 <h5>No upcoming appointments</h5>
                 <p className="text-muted">You have no scheduled appointments at this time.</p>
-                  <button className="btn btn-primary-custom mt-3" onClick={onBookAppointment}>
-                    Book an Appointment
-                  </button>
+                <button className="btn btn-primary-custom mt-3" onClick={onBookAppointment}>
+                  Book an Appointment
+                </button>
               </div>
             ) : (
               <>
-             <div className="d-flex justify-content-between align-items-center mb-3">
-              <h6 className="mb-0">Your Appointments</h6>
-              <button className="btn btn-primary-custom" onClick={onBookAppointment}>
-                + Book New Appointment
-              </button>
-            </div>
-             <div className="d-flex flex-column gap-3">
-                {appointments.map((appt) => (
-                  <div className="appointment-card" key={appt.id}>
-                    <div className="appt-date-block">
-                      <div className="appt-month">
-                        {new Date(appt.date).toLocaleString("default", { month: "short" })}
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h6 className="mb-0">Your Appointments</h6>
+                  <button className="btn btn-primary-custom" onClick={onBookAppointment}>
+                    + Book New Appointment
+                  </button>
+                </div>
+                <div className="d-flex flex-column gap-3">
+                  {appointments.map((appt) => (
+                    <div className="appointment-card" key={appt.id}>
+                      <div className="appt-date-block">
+                        <div className="appt-month">
+                          {appt.appointmentDate
+                            ? new Date(appt.appointmentDate + 'T00:00:00').toLocaleString("default", { month: "short" })
+                            : '--'}
+                        </div>
+                        <div className="appt-day">
+                          {appt.appointmentDate
+                            ? new Date(appt.appointmentDate + 'T00:00:00').getDate()
+                            : '--'}
+                        </div>
                       </div>
-                      <div className="appt-day">
-                        {new Date(appt.date).getDate()}
+                      <div className="appt-details">
+                        <div className="appt-type">{appt.specificExam || appt.examType || 'Exam'}</div>
+                        <div className="appt-meta">
+                          {appt.appointmentLocation} · {appt.flexibleTiming ? 'Flexible' : appt.appointmentTime}
+                        </div>
                       </div>
+                      <span className={`appt-status ${appt.status?.toLowerCase()}`}>
+                        {appt.status}
+                      </span>
+                      <button
+                        className="btn-reschedule"
+                        onClick={() => handleReschedule(appt)}
+                      >
+                        Reschedule
+                      </button>
                     </div>
-                    <div className="appt-details">
-                      <div className="appt-type">{appt.type}</div>
-                      <div className="appt-meta">{appt.doctor} · {appt.time}</div>
-                    </div>
-                    <span className={`appt-status ${appt.status.toLowerCase()}`}>
-                      {appt.status}
-                    </span>
-                    <button
-                      className="btn-reschedule"
-                      onClick={() => handleReschedule(appt)}
-                    >
-                      Reschedule
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         )}
@@ -302,7 +308,7 @@ const handleReschedule = (appt) => {
             </div>
           </div>
         )}
-          {activeTab === "results" && <ExamResultsTab user={user} />}
+        {activeTab === "results" && <ExamResultsTab user={user} />}
       </div>
     </div>
   );

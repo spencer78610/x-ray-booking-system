@@ -9,15 +9,11 @@ import { doc, updateDoc } from "firebase/firestore";
 import { db } from "./firebase";
 import './App.css';
 
-// Pages folder contains main page components.
-// Features folder contains smaller reusable components used within pages.
-
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [page, setPage] = useState('login');
   const [selectedAppointment, setSelectedAppointment] = useState(null);
 
-  // Route based on role after login
   const handleLogin = (user) => {
     setCurrentUser(user);
     if (user.role === 'staff') {
@@ -27,7 +23,6 @@ export default function App() {
     }
   };
 
-  // New patients go to booking first
   const handleAccountCreated = (user) => {
     setCurrentUser(user);
     setPage('profile');
@@ -43,11 +38,7 @@ export default function App() {
   }
 
   if (page === 'booking') {
-    // Block staff from booking page
-    if (currentUser?.role === 'staff') {
-      setPage('staff');
-      return null;
-    }
+    if (currentUser?.role === 'staff') { setPage('staff'); return null; }
     return (
       <BookingForm
         user={currentUser}
@@ -58,55 +49,57 @@ export default function App() {
   }
 
   if (page === 'profile') {
-    // Block staff from patient profile
-    if (currentUser?.role === 'staff') {
-      setPage('staff');
-      return null;
-    }
+    if (currentUser?.role === 'staff') { setPage('staff'); return null; }
     return (
       <ProfilePage
         user={currentUser}
         onLogout={() => setPage('login')}
         onBookAppointment={() => setPage('booking')}
-        onReschedule={(appt) => { setSelectedAppointment(appt); setPage('reschedule'); }}
+        onReschedule={(appt) => {
+          setSelectedAppointment(appt);
+          setPage('reschedule');
+        }}
       />
     );
   }
 
   if (page === 'reschedule') {
-    // Block staff from reschedule page
-    if (currentUser?.role === 'staff') {
-      setPage('staff');
-      return null;
-    }
+    if (currentUser?.role === 'staff') { setPage('staff'); return null; }
     return (
       <CancelReschedule
         formData={selectedAppointment}
-        onReschedule={async (newDate, newTime) => {
+        onReschedule={async (newLocation, newDate, newTime, isFlexible) => {
           if (selectedAppointment?.id) {
             const apptRef = doc(db, "appointments", selectedAppointment.id);
-            await updateDoc(apptRef, { date: newDate, time: newTime });
+            await updateDoc(apptRef, {
+              appointmentLocation: newLocation,
+              appointmentDate: newDate,
+              appointmentTime: isFlexible ? 'Flexible' : newTime,
+              flexibleTiming: isFlexible,
+              status: 'Confirmed',
+            });
           }
+          setSelectedAppointment(null);
           setPage('profile');
         }}
         onCancel={async () => {
           if (selectedAppointment?.id) {
             const apptRef = doc(db, "appointments", selectedAppointment.id);
-            await updateDoc(apptRef, { status: "Cancelled" });
+            await updateDoc(apptRef, { status: 'Cancelled' });
           }
+          setSelectedAppointment(null);
           setPage('profile');
         }}
-        onGoToProfile={() => setPage('profile')}
+        onGoToProfile={() => {
+          setSelectedAppointment(null);
+          setPage('profile');
+        }}
       />
     );
   }
 
   if (page === 'staff') {
-    // Block patients from staff page
-    if (currentUser?.role === 'patient') {
-      setPage('profile');
-      return null;
-    }
+    if (currentUser?.role === 'patient') { setPage('profile'); return null; }
     return (
       <StaffPage
         user={currentUser}
