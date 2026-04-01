@@ -80,9 +80,9 @@ export default function Referral({ formData, handleChange, errors }) {
 
       {formData.referral === "no" && (
         <div className="form-group full-width">
-          <p className="form-warning">
+          {/* <p className="form-warning">
             A referral is required before your appointment can be booked.
-          </p>
+          </p> */}
         </div>
       )}
     </div>

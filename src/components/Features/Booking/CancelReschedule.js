@@ -1,210 +1,83 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 
-const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');
-
-  .cr-root {
-    min-height: 100vh;
-    background: #f4f6fb;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'DM Sans', sans-serif;
-    padding: 24px;
+const clinicHours = {
+  "440 Boler Road": {
+    mon: ["07:00", "21:00"], tue: ["07:00", "21:00"], wed: ["07:00", "21:00"],
+    thu: ["07:00", "21:00"], fri: ["08:00", "16:00"]
+  },
+  "595 Bradley Avenue": {
+    mon: ["07:00", "21:00"], tue: ["07:00", "21:00"], wed: ["07:00", "21:00"],
+    thu: ["07:00", "21:00"], fri: ["08:00", "16:00"], sat: ["08:00", "15:00"]
+  },
+  "450 Central Avenue": {
+    mon: ["08:00", "16:00"], tue: ["08:00", "16:00"], wed: ["08:00", "16:00"],
+    thu: ["08:00", "16:00"], fri: ["08:00", "16:00"]
+  },
+  "1657 Dundas Street East": {
+    mon: ["08:00", "16:00"], tue: ["08:00", "16:00"], wed: ["08:00", "16:00"],
+    thu: ["08:00", "16:00"], fri: ["08:00", "16:00"]
+  },
+  "3209 Wonderland Road South": {
+    mon: ["08:00", "16:00"], tue: ["08:00", "16:00"], wed: ["08:00", "16:00"],
+    thu: ["08:00", "16:00"], fri: ["08:00", "16:00"]
   }
+};
 
-  .cr-card {
-    background: white;
-    border-radius: 16px;
-    border: 0.5px solid #e5e7eb;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-    padding: 2rem;
-    width: 100%;
-    max-width: 520px;
+const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+
+const getDayKey = (dateString) => {
+  const [year, month, day] = dateString.split("-");
+  const date = new Date(year, month - 1, day);
+  return days[date.getDay()];
+};
+
+const generateTimeSlots = (start, end) => {
+  const slots = [];
+  let current = new Date(`1970-01-01T${start}:00`);
+  const finish = new Date(`1970-01-01T${end}:00`);
+  while (current < finish) {
+    slots.push(current.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+    current.setMinutes(current.getMinutes() + 30);
   }
-
-  .cr-header {
-    margin-bottom: 24px;
-  }
-
-  .cr-title {
-    font-size: 22px;
-    font-weight: 600;
-    color: #1a3c6e;
-    margin-bottom: 8px;
-  }
-
-  .cr-current {
-    background: #e8f0fb;
-    border-radius: 10px;
-    padding: 12px 16px;
-    font-size: 14px;
-    color: #1a3c6e;
-  }
-
-  .cr-section {
-    margin-top: 24px;
-  }
-
-  .cr-section-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: #1a3c6e;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1.5px solid #e5e7eb;
-  }
-
-  .cr-fields {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-
-  .cr-field label {
-    display: block;
-    font-size: 12px;
-    font-weight: 500;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 6px;
-  }
-
-  .cr-field input {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1.5px solid #e5e7eb;
-    border-radius: 8px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    color: #1a3c6e;
-    background: #f9fafb;
-    outline: none;
-    box-sizing: border-box;
-    transition: border-color 0.2s;
-  }
-
-  .cr-field input:focus {
-    border-color: #1a6bcc;
-    background: white;
-    box-shadow: 0 0 0 3px rgba(26,107,204,0.1);
-  }
-
-  .cr-btn-reschedule {
-    width: 100%;
-    padding: 11px;
-    background: linear-gradient(135deg, #1a3c6e, #1a6bcc);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: opacity 0.2s, transform 0.1s;
-  }
-
-  .cr-btn-reschedule:hover { opacity: 0.92; }
-  .cr-btn-reschedule:active { transform: scale(0.99); }
-
-  .cr-divider {
-    border: none;
-    border-top: 1.5px solid #e5e7eb;
-    margin: 24px 0;
-  }
-
-  .cr-cancel-box {
-    background: #fff5f5;
-    border: 1px solid #fecaca;
-    border-radius: 10px;
-    padding: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
-  .cr-cancel-text {
-    font-size: 13px;
-    color: #6b7280;
-    line-height: 1.5;
-  }
-
-  .cr-btn-cancel {
-    background: #ef4444;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 9px 18px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: opacity 0.2s;
-    flex-shrink: 0;
-  }
-
-  .cr-btn-cancel:hover { opacity: 0.88; }
-
-  .cr-success {
-    text-align: center;
-    padding: 2rem;
-  }
-
-  .cr-success-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-  }
-
-  .cr-success-title {
-    font-size: 20px;
-    font-weight: 600;
-    color: #1a3c6e;
-    margin-bottom: 8px;
-  }
-
-  .cr-success-sub {
-    font-size: 14px;
-    color: #6b7280;
-    line-height: 1.6;
-  }
-
-  .cr-redirect {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 16px;
-    font-size: 13px;
-    color: #1a6bcc;
-  }
-
-  .cr-spinner {
-    width: 14px;
-    height: 14px;
-    border: 2px solid #e5e7eb;
-    border-top-color: #1a6bcc;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-`;
+  return slots;
+};
 
 function CancelReschedule({ formData, onReschedule, onCancel, onGoToProfile }) {
-  const [newDate, setNewDate] = useState('');
-  const [newTime, setNewTime] = useState('');
-  const [action, setAction] = useState('');
+  const [newLocation, setNewLocation] = useState(formData?.appointmentLocation || '');
+  const [newDate, setNewDate]         = useState(formData?.appointmentDate || '');
+  const [newTime, setNewTime]         = useState('');
+  const [isFlexible, setIsFlexible]   = useState(false);
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [errors, setErrors]           = useState({});
+  const [action, setAction]           = useState('');
+
+  // Recompute time slots whenever location or date changes
+  useEffect(() => {
+    if (!newLocation || !newDate) { setAvailableSlots([]); return; }
+    const schedule = clinicHours[newLocation];
+    const dayKey   = getDayKey(newDate);
+    if (!schedule || !schedule[dayKey]) { setAvailableSlots([]); return; }
+    const [start, end] = schedule[dayKey];
+    setAvailableSlots(generateTimeSlots(start, end));
+    setNewTime(''); // reset time when date/location changes
+  }, [newLocation, newDate]);
+
+  const isDateAvailable = (date) => {
+    if (!newLocation) return false;
+    const schedule = clinicHours[newLocation];
+    const dayKey   = days[date.getDay()];
+    return schedule && schedule[dayKey];
+  };
 
   const handleReschedule = () => {
-    if (!newDate || !newTime) {
-      alert('Please select a new date and time.');
-      return;
-    }
-    onReschedule(newDate, newTime);
+    const e = {};
+    if (!newLocation) e.newLocation = 'Please select a location.';
+    if (!newDate)     e.newDate     = 'Please select a date.';
+    if (!isFlexible && !newTime) e.newTime = 'Please select a time or check flexible timing.';
+    if (Object.keys(e).length > 0) { setErrors(e); return; }
+    onReschedule(newLocation, newDate, newTime, isFlexible);
     setAction('rescheduled');
     setTimeout(() => onGoToProfile(), 3000);
   };
@@ -216,88 +89,138 @@ function CancelReschedule({ formData, onReschedule, onCancel, onGoToProfile }) {
 
   if (action === 'rescheduled') {
     return (
-      <>
-        <style>{styles}</style>
-        <div className="cr-root">
-          <div className="cr-card">
-            <div className="cr-success">
-              <div className="cr-success-icon">✅</div>
-              <div className="cr-success-title">Appointment Rescheduled!</div>
-              <div className="cr-success-sub">
-                Your new appointment is on <strong>{newDate}</strong> at <strong>{newTime}</strong>.
-              </div>
-              <div className="cr-redirect">
-                <div className="cr-spinner"></div>
-                Redirecting to your profile...
-              </div>
-            </div>
-          </div>
+      <div className="app-container">
+        <div className="booking-form confirmation-container">
+          <h2>✅ Appointment Rescheduled!</h2>
+          <p>Your new appointment is on <strong>{newDate}</strong> at <strong>{isFlexible ? 'Flexible' : newTime}</strong>.</p>
+          <p className="form-warning">Redirecting to your profile...</p>
         </div>
-      </>
+      </div>
     );
   }
 
   if (action === 'cancelled') {
     return (
-      <>
-        <style>{styles}</style>
-        <div className="cr-root">
-          <div className="cr-card">
-            <div className="cr-success">
-              <div className="cr-success-icon">❌</div>
-              <div className="cr-success-title">Appointment Cancelled</div>
-              <div className="cr-success-sub">
-                Your appointment has been successfully cancelled. We hope to see you soon!
-              </div>
-            </div>
-          </div>
+      <div className="app-container">
+        <div className="booking-form confirmation-container">
+          <h2>❌ Appointment Cancelled</h2>
+          <p>Your appointment has been successfully cancelled. We hope to see you soon!</p>
         </div>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      <style>{styles}</style>
-      <div className="cr-root">
-        <div className="cr-card">
-          <div className="cr-header">
-            <div className="cr-title">Cancel or Reschedule</div>
-            <div className="cr-current">
-              📅 Current appointment: <strong>{formData?.appointmentDate || formData?.date}</strong> at <strong>{formData?.appointmentTime || formData?.time}</strong>
-            </div>
+    <div className="app-container">
+      <div className="booking-form">
+        <h2>Cancel or Reschedule</h2>
+
+        {/* Current appointment summary */}
+        <div className="confirmation-box">
+          <p><strong>Current Location:</strong> {formData?.appointmentLocation || 'N/A'}</p>
+          <p><strong>Current Date:</strong> {formData?.appointmentDate || 'N/A'}</p>
+          <p><strong>Current Time:</strong> {formData?.flexibleTiming ? 'Flexible' : (formData?.appointmentTime || 'N/A')}</p>
+        </div>
+
+        <h3>Select a New Appointment</h3>
+
+        <div className="form-grid">
+
+          {/* Location */}
+          <div className="form-group">
+            <label>Preferred Location</label>
+            <select
+              name="newLocation"
+              value={newLocation}
+              className={errors.newLocation ? 'error' : ''}
+              onChange={(e) => {
+                setNewLocation(e.target.value);
+                setNewDate('');
+                setNewTime('');
+                setErrors(prev => ({ ...prev, newLocation: '' }));
+              }}
+            >
+              <option value="">Select a location</option>
+              <option value="440 Boler Road">440 Boler Road</option>
+              <option value="595 Bradley Avenue">595 Bradley Avenue</option>
+              <option value="450 Central Avenue">450 Central Avenue</option>
+              <option value="1657 Dundas Street East">1657 Dundas Street East</option>
+              <option value="3209 Wonderland Road South">3209 Wonderland Road South</option>
+            </select>
+            {errors.newLocation && <p className="error-text">{errors.newLocation}</p>}
           </div>
 
-          <div className="cr-section">
-            <div className="cr-section-title">Reschedule</div>
-            <div className="cr-fields">
-              <div className="cr-field">
-                <label>New Date</label>
-                <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} />
-              </div>
-              <div className="cr-field">
-                <label>New Time</label>
-                <input type="time" value={newTime} onChange={(e) => setNewTime(e.target.value)} />
-              </div>
-            </div>
-            <button onClick={handleReschedule} className="cr-btn-reschedule">
-              Confirm Reschedule
-            </button>
+          {/* Calendar */}
+          <div className="form-group">
+            <label>Preferred Date</label>
+            <Calendar
+              onChange={(date) => {
+                setNewDate(date.toISOString().split("T")[0]);
+                setErrors(prev => ({ ...prev, newDate: '' }));
+              }}
+              tileDisabled={({ date }) => date < new Date() || !isDateAvailable(date)}
+              className={errors.newDate ? 'error' : ''}
+            />
+            {errors.newDate && <p className="error-text">{errors.newDate}</p>}
           </div>
 
-          <hr className="cr-divider" />
-
-          <div className="cr-cancel-box">
-            <div className="cr-cancel-text">
-              Want to cancel instead? This action cannot be undone.
+          {/* Time slots */}
+          {availableSlots.length > 0 && (
+            <div className="form-group full-width">
+              <label>Available Time Slots</label>
+              <div className={`time-slots ${errors.newTime ? 'error' : ''}`}>
+                {availableSlots.map((slot) => (
+                  <button
+                    key={slot}
+                    type="button"
+                    className={`time-slot ${newTime === slot ? 'selected' : ''}`}
+                    onClick={() => {
+                      setNewTime(slot);
+                      setErrors(prev => ({ ...prev, newTime: '' }));
+                    }}
+                  >
+                    {slot}
+                  </button>
+                ))}
+              </div>
+              {errors.newTime && <p className="error-text">{errors.newTime}</p>}
             </div>
-            <button onClick={handleCancel} className="cr-btn-cancel">
+          )}
+
+          {/* Flexible timing */}
+          <div className="form-group full-width">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={isFlexible}
+                onChange={(e) => {
+                  setIsFlexible(e.target.checked);
+                  setErrors(prev => ({ ...prev, newTime: '' }));
+                }}
+              />
+              I am flexible with appointment timing
+            </label>
+          </div>
+
+        </div>
+
+        <div className="step-buttons">
+          <button className="submit-btn" type="button" onClick={handleReschedule}>
+            Confirm Reschedule
+          </button>
+
+          <button className="secondary-btn" type="button" onClick={handleCancel}>
               Cancel Appointment
             </button>
-          </div>
         </div>
+
+
+        
+                      {/* <p className="form-warning">Want to cancel instead? This action cannot be undone.</p> */}
+
+
       </div>
-    </>
+    </div>
   );
 }
 
