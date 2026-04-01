@@ -10,7 +10,7 @@ function CompletedForms() {
   useEffect(() => {
     const fetchForms = async () => {
       try {
-        const q = query(collection(db, 'appointments'), orderBy('date', 'asc'));
+        const q = query(collection(db, 'appointments'), orderBy('createdAt', 'desc'));
         const snapshot = await getDocs(q);
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setForms(data);
@@ -22,6 +22,18 @@ function CompletedForms() {
     };
     fetchForms();
   }, []);
+
+  // Helper to read either field name convention
+  const getDate = (f) => f.appointmentDate || f.date || 'N/A';
+  const getTime = (f) => f.appointmentTime || f.time || 'N/A';
+  const getType = (f) => f.specificExam || f.examType || f.type || 'N/A';
+  const getPatient = (f) => {
+    const firstName = f.firstName || '';
+    const lastName = f.lastName || '';
+    const fullName = `${firstName} ${lastName}`.trim();
+    return fullName || f.patientName || f.email || f.uid || '—';
+  };
+  const getLocation = (f) => f.appointmentLocation || 'N/A';
 
   if (loading) {
     return (
@@ -58,23 +70,24 @@ function CompletedForms() {
         </button>
 
         <h5 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-dark)', marginBottom: 20 }}>
-          Booking Form — {selectedForm.date} at {selectedForm.time}
+          Booking Form — {getDate(selectedForm)} at {getTime(selectedForm)}
         </h5>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           {[
-            { label: 'Patient Email', value: selectedForm.email },
-            { label: 'Appointment Date', value: selectedForm.date },
-            { label: 'Appointment Time', value: selectedForm.time },
-            { label: 'Exam Type', value: selectedForm.type },
-            { label: 'Specific Exam', value: selectedForm.specificExam },
+            { label: 'Patient', value: getPatient(selectedForm) },
+            { label: 'Appointment Date', value: getDate(selectedForm) },
+            { label: 'Appointment Time', value: getTime(selectedForm) },
+            { label: 'Exam Type', value: getType(selectedForm) },
             { label: 'Body Part', value: selectedForm.bodyPart },
             { label: 'Side', value: selectedForm.side },
-            { label: 'Location', value: selectedForm.appointmentLocation },
+            { label: 'Location', value: getLocation(selectedForm) },
             { label: 'Physician', value: selectedForm.physician },
             { label: 'Clinic', value: selectedForm.clinic },
             { label: 'Referral', value: selectedForm.referral },
+            { label: 'Flexible Timing', value: selectedForm.flexibleTiming ? 'Yes' : 'No' },
             { label: 'Status', value: selectedForm.status },
+            { label: 'Booked By Staff', value: selectedForm.bookedByStaff ? 'Yes' : 'No' },
           ].map(({ label, value }) => (
             <div key={label} style={{
               padding: '12px 14px',
@@ -121,20 +134,17 @@ function CompletedForms() {
         <tbody>
           {forms.map((form) => (
             <tr key={form.id}>
-              <td>{form.date}</td>
-              <td>{form.time}</td>
-              <td>{form.email || form.uid}</td>
-              <td>{form.type || '—'}</td>
+              <td>{getDate(form)}</td>
+              <td>{getTime(form)}</td>
+              <td>{getPatient(form)}</td>
+              <td>{getType(form)}</td>
               <td>
                 <span className={`badge badge-${form.status?.toLowerCase() || 'pending'}`}>
                   {form.status || 'Pending'}
                 </span>
               </td>
               <td>
-                <button
-                  className="staff-btn"
-                  onClick={() => setSelectedForm(form)}
-                >
+                <button className="staff-btn" onClick={() => setSelectedForm(form)}>
                   View Form
                 </button>
               </td>

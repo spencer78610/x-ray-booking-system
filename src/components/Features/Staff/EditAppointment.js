@@ -16,7 +16,7 @@ function EditAppointment() {
 
   const fetchAppointments = async () => {
     try {
-      const q = query(collection(db, 'appointments'), orderBy('date', 'asc'));
+      const q = query(collection(db, 'appointments'), orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setAppointments(data);
@@ -27,13 +27,25 @@ function EditAppointment() {
     }
   };
 
+  // Helper to read either field name convention
+  const getDate = (appt) => appt.appointmentDate || appt.date || '';
+  const getTime = (appt) => appt.appointmentTime || appt.time || '';
+  const getType = (appt) => appt.specificExam || appt.examType || appt.type || '—';
+  const getPatient = (appt) => {
+    const firstName = appt.firstName || '';
+    const lastName = appt.lastName || '';
+    const fullName = `${firstName} ${lastName}`.trim();
+    return fullName || appt.patientName || appt.email || appt.uid || '—';
+  };
+   const getLocation = (appt) => appt.appointmentLocation || '';
+
   const handleEdit = (appt) => {
     setEditingId(appt.id);
     setEditData({
-      date: appt.date || '',
-      time: appt.time || '',
+      appointmentDate: getDate(appt),
+      appointmentTime: getTime(appt),
+      appointmentLocation: getLocation(appt),
       status: appt.status || 'Confirmed',
-      appointmentLocation: appt.appointmentLocation || '',
     });
   };
 
@@ -41,7 +53,17 @@ function EditAppointment() {
     setSaving(true);
     try {
       const apptRef = doc(db, 'appointments', id);
-      await updateDoc(apptRef, editData);
+      // Write using the correct field names and also update legacy fields
+      // so staff-booked appointments stay consistent too
+      await updateDoc(apptRef, {
+        appointmentDate: editData.appointmentDate,
+        appointmentTime: editData.appointmentTime,
+        appointmentLocation: editData.appointmentLocation,
+        status: editData.status,
+        // Keep legacy fields in sync for staff-booked appointments
+        date: editData.appointmentDate,
+        time: editData.appointmentTime,
+      });
       setAppointments(prev =>
         prev.map(appt => appt.id === id ? { ...appt, ...editData } : appt)
       );
@@ -84,9 +106,7 @@ function EditAppointment() {
 
   return (
     <div className="staff-card">
-      {successMsg && (
-        <div className="staff-alert-success">✅ {successMsg}</div>
-      )}
+      {successMsg && <div className="staff-alert-success">✅ {successMsg}</div>}
       <table className="staff-table">
         <thead>
           <tr>
@@ -103,21 +123,21 @@ function EditAppointment() {
             <tr key={appt.id}>
               {editingId === appt.id ? (
                 <>
-                  <td>{appt.email || appt.uid}</td>
+                  <td>{getPatient(appt)}</td>
                   <td>
                     <input
                       type="date"
                       className="staff-input"
-                      value={editData.date}
-                      onChange={e => setEditData({ ...editData, date: e.target.value })}
+                      value={editData.appointmentDate}
+                      onChange={e => setEditData({ ...editData, appointmentDate: e.target.value })}
                     />
                   </td>
                   <td>
                     <input
                       type="time"
                       className="staff-input"
-                      value={editData.time}
-                      onChange={e => setEditData({ ...editData, time: e.target.value })}
+                      value={editData.appointmentTime}
+                      onChange={e => setEditData({ ...editData, appointmentTime: e.target.value })}
                     />
                   </td>
                   <td>
@@ -142,11 +162,7 @@ function EditAppointment() {
                     </select>
                   </td>
                   <td style={{ display: 'flex', gap: 8 }}>
-                    <button
-                      className="staff-btn"
-                      onClick={() => handleSave(appt.id)}
-                      disabled={saving}
-                    >
+                    <button className="staff-btn" onClick={() => handleSave(appt.id)} disabled={saving}>
                       {saving ? 'Saving...' : 'Save'}
                     </button>
                     <button className="staff-btn-outline" onClick={handleCancel}>
@@ -156,20 +172,17 @@ function EditAppointment() {
                 </>
               ) : (
                 <>
-                  <td>{appt.email || appt.uid}</td>
-                  <td>{appt.date}</td>
-                  <td>{appt.time}</td>
-                  <td>{appt.appointmentLocation || '—'}</td>
+                  <td>{getPatient(appt)}</td>
+                  <td>{getDate(appt)}</td>
+                  <td>{getTime(appt)}</td>
+                  <td>{getLocation(appt) || '—'}</td>
                   <td>
                     <span className={`badge badge-${appt.status?.toLowerCase() || 'pending'}`}>
                       {appt.status || 'Pending'}
                     </span>
                   </td>
                   <td>
-                    <button
-                      className="staff-btn-outline"
-                      onClick={() => handleEdit(appt)}
-                    >
+                    <button className="staff-btn-outline" onClick={() => handleEdit(appt)}>
                       Edit
                     </button>
                   </td>

@@ -9,10 +9,13 @@ function UpcomingAppointments() {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const q = query(collection(db, 'appointments'), orderBy('date', 'asc'));
+        // Order by createdAt since appointmentDate and date are different fields
+        const q = query(collection(db, 'appointments'), orderBy('createdAt', 'desc'));
         const snapshot = await getDocs(q);
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setAppointments(data);
+        // Filter out cancelled, show upcoming only
+        const upcoming = data.filter(a => a.status !== 'Cancelled');
+        setAppointments(upcoming);
       } catch (err) {
         console.error('Error fetching appointments:', err);
       } finally {
@@ -21,6 +24,18 @@ function UpcomingAppointments() {
     };
     fetchAppointments();
   }, []);
+
+  // Helper to read either field name convention
+  const getDate = (appt) => appt.appointmentDate || appt.date || '—';
+  const getTime = (appt) => appt.appointmentTime || appt.time || '—';
+  const getType = (appt) => appt.specificExam || appt.examType || appt.type || '—';
+  const getPatient = (appt) => {
+    const firstName = appt.firstName || '';
+    const lastName = appt.lastName || '';
+    const fullName = `${firstName} ${lastName}`.trim();
+    return fullName || appt.patientName || appt.email || appt.uid || '—';
+  };
+  const getLocation = (appt) => appt.appointmentLocation || '—';
 
   if (loading) {
     return (
@@ -52,17 +67,19 @@ function UpcomingAppointments() {
             <th>Date</th>
             <th>Time</th>
             <th>Patient</th>
-            <th>Type</th>
+            <th>Exam Type</th>
+            <th>Location</th>
             <th>Status</th>
           </tr>
         </thead>
         <tbody>
           {appointments.map((appt) => (
             <tr key={appt.id}>
-              <td>{appt.date}</td>
-              <td>{appt.time}</td>
-              <td>{appt.email || appt.uid}</td>
-              <td>{appt.type || '—'}</td>
+              <td>{getDate(appt)}</td>
+              <td>{getTime(appt)}</td>
+              <td>{getPatient(appt)}</td>
+              <td>{getType(appt)}</td>
+              <td>{getLocation(appt)}</td>
               <td>
                 <span className={`badge badge-${appt.status?.toLowerCase() || 'pending'}`}>
                   {appt.status || 'Pending'}

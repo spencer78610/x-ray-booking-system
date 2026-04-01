@@ -71,9 +71,11 @@ export default function Referral({ formData, handleChange, errors }) {
               accept=".pdf,.jpg,.png"
               onChange={handleChange}
               className={errors.referralFile ? 'error' : ''}
-              required
+              disabled
             />
-            {errors.referralFile && <p className="error-text">{errors.referralFile}</p>}
+            <p className="form-warning">
+              📎 File upload coming soon. Please bring your referral document to your appointment.
+            </p>
           </div>
         </>
       )}
