@@ -69,7 +69,7 @@ function BookingForm({ user, onLogout, onGoToProfile }) {
       if (formData.referral === 'yes') {
         if (!formData.physician.trim()) e.physician    = 'Referring physician name is required.';
         if (!formData.clinic.trim())    e.clinic       = 'Referring clinic name is required.';
-        if (!formData.referralFile)     e.referralFile = 'Please upload your referral document.';
+        // if (!formData.referralFile)     e.referralFile = 'Please upload your referral document.';
       }
     }
     if (currentStep === 4) {

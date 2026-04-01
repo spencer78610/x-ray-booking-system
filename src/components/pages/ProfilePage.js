@@ -36,8 +36,11 @@ const ProfilePage = ({ user, onLogout, onBookAppointment, onReschedule }) => {
           setProfile(defaults);
           setFormData(defaults);
         }
-        const apptQuery = query(collection(db, "appointments"), where("uid", "==", user.uid));
-        const apptSnap = await getDocs(apptQuery);
+        const apptQuery = query(
+          collection(db, "appointments"),
+          where("uid", "==", user.uid),
+          where("status", "!=", "Cancelled")
+        ); const apptSnap = await getDocs(apptQuery);
         const appts = apptSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setAppointments(appts);
       } catch (err) {
@@ -249,12 +252,14 @@ const ProfilePage = ({ user, onLogout, onBookAppointment, onReschedule }) => {
                       <span className={`appt-status ${appt.status?.toLowerCase()}`}>
                         {appt.status}
                       </span>
-                      <button
-                        className="btn-reschedule"
-                        onClick={() => handleReschedule(appt)}
-                      >
-                        Reschedule
-                      </button>
+                      {appt.status !== 'Cancelled' && (
+                        <button
+                          className="btn-reschedule"
+                          onClick={() => handleReschedule(appt)}
+                        >
+                          Reschedule
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
