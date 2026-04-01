@@ -30,7 +30,7 @@ function EditAppointment() {
   // Helper to read either field name convention
   const getDate = (appt) => appt.appointmentDate || appt.date || '';
   const getTime = (appt) => appt.appointmentTime || appt.time || '';
-  const getType = (appt) => appt.specificExam || appt.examType || appt.type || '—';
+  // const getType = (appt) => appt.specificExam || appt.examType || appt.type || '—';
   const getPatient = (appt) => {
     const firstName = appt.firstName || '';
     const lastName = appt.lastName || '';
