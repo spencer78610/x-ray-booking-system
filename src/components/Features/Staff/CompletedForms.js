@@ -6,6 +6,7 @@ function CompletedForms() {
   const [forms, setForms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedForm, setSelectedForm] = useState(null);
+  const [showCancelled, setShowCancelled] = useState(false);
 
   useEffect(() => {
     const fetchForms = async () => {
@@ -23,15 +24,12 @@ function CompletedForms() {
     fetchForms();
   }, []);
 
-  // Helper to read either field name convention
   const getDate = (f) => f.appointmentDate || f.date || 'N/A';
   const getTime = (f) => f.appointmentTime || f.time || 'N/A';
   const getType = (f) => f.specificExam || f.examType || f.type || 'N/A';
   const getPatient = (f) => {
-    const firstName = f.firstName || '';
-    const lastName = f.lastName || '';
-    const fullName = `${firstName} ${lastName}`.trim();
-    return fullName || f.patientName || f.email || f.uid || '—';
+    const fullName = `${f.firstName || ''} ${f.lastName || ''}`.trim();
+    return fullName || f.patientName || f.email || f.uid || 'N/A';
   };
   const getLocation = (f) => f.appointmentLocation || 'N/A';
 
@@ -56,6 +54,10 @@ function CompletedForms() {
       </div>
     );
   }
+
+  const visibleForms = showCancelled
+    ? forms
+    : forms.filter(f => f.status !== 'Cancelled');
 
   // Detail view
   if (selectedForm) {
@@ -90,10 +92,8 @@ function CompletedForms() {
             { label: 'Booked By Staff', value: selectedForm.bookedByStaff ? 'Yes' : 'No' },
           ].map(({ label, value }) => (
             <div key={label} style={{
-              padding: '12px 14px',
-              background: 'var(--bg)',
-              borderRadius: 10,
-              border: '1px solid var(--border)'
+              padding: '12px 14px', background: 'var(--bg)',
+              borderRadius: 10, border: '1px solid var(--border)'
             }}>
               <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: 4 }}>
                 {label}
@@ -120,38 +120,63 @@ function CompletedForms() {
   // List view
   return (
     <div className="staff-card">
-      <table className="staff-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Patient</th>
-            <th>Exam Type</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {forms.map((form) => (
-            <tr key={form.id}>
-              <td>{getDate(form)}</td>
-              <td>{getTime(form)}</td>
-              <td>{getPatient(form)}</td>
-              <td>{getType(form)}</td>
-              <td>
-                <span className={`badge badge-${form.status?.toLowerCase() || 'pending'}`}>
-                  {form.status || 'Pending'}
-                </span>
-              </td>
-              <td>
-                <button className="staff-btn" onClick={() => setSelectedForm(form)}>
-                  View Form
-                </button>
-              </td>
+
+      {/* Toggle */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+        <button
+          className={showCancelled ? 'staff-btn' : 'staff-btn-outline'}
+          onClick={() => setShowCancelled(prev => !prev)}
+        >
+          {showCancelled ? 'Hide Cancelled' : 'Show Cancelled'}
+        </button>
+      </div>
+
+      {visibleForms.length === 0 ? (
+        <div className="staff-empty">
+          <div className="staff-empty-icon">✅</div>
+          <h5>No active forms</h5>
+          <p>All submissions have been cancelled. Toggle to show them.</p>
+        </div>
+      ) : (
+        <table className="staff-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Patient</th>
+              <th>Exam Type</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {visibleForms.map((form) => (
+              <tr
+                key={form.id}
+                style={{
+                  opacity: form.status === 'Cancelled' ? 0.5 : 1,
+                  background: form.status === 'Cancelled' ? '#fafafa' : 'transparent',
+                }}
+              >
+                <td>{getDate(form)}</td>
+                <td>{getTime(form)}</td>
+                <td>{getPatient(form)}</td>
+                <td>{getType(form)}</td>
+                <td>
+                  <span className={`badge badge-${form.status?.toLowerCase() || 'pending'}`}>
+                    {form.status || 'Pending'}
+                  </span>
+                </td>
+                <td>
+                  <button className="staff-btn" onClick={() => setSelectedForm(form)}>
+                    View Form
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

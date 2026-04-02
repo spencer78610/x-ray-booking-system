@@ -17,6 +17,12 @@ const ProfilePage = ({ user, onLogout, onBookAppointment, onReschedule }) => {
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 
+  const upcomingAppointments = appointments.filter(
+    a => a.status !== 'Cancelled' && a.status !== 'Completed'
+  );
+  const pastAppointments = appointments.filter(
+    a => a.status === 'Cancelled' || a.status === 'Completed'
+  );
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -38,9 +44,9 @@ const ProfilePage = ({ user, onLogout, onBookAppointment, onReschedule }) => {
         }
         const apptQuery = query(
           collection(db, "appointments"),
-          where("uid", "==", user.uid),
-          where("status", "!=", "Cancelled")
-        ); const apptSnap = await getDocs(apptQuery);
+          where("uid", "==", user.uid)
+        );
+        const apptSnap = await getDocs(apptQuery);
         const appts = apptSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setAppointments(appts);
       } catch (err) {
@@ -154,8 +160,8 @@ const ProfilePage = ({ user, onLogout, onBookAppointment, onReschedule }) => {
               onClick={() => setActiveTab("appointments")}
             >
               Upcoming Appointments
-              {appointments.length > 0 && (
-                <span className="badge ms-2">{appointments.length}</span>
+              {upcomingAppointments.length > 0 && (
+                <span className="badge ms-2">{upcomingAppointments.length}</span>
               )}
             </button>
           </li>
@@ -211,8 +217,10 @@ const ProfilePage = ({ user, onLogout, onBookAppointment, onReschedule }) => {
         {/* Appointments Tab */}
         {activeTab === "appointments" && (
           <div className="profile-card">
-            {appointments.length === 0 ? (
-              <div className="text-center py-5">
+
+            {/* ── Upcoming ── */}
+            {upcomingAppointments.length === 0 ? (
+              <div className="text-center py-4">
                 <div className="empty-icon mb-3">📅</div>
                 <h5>No upcoming appointments</h5>
                 <p className="text-muted">You have no scheduled appointments at this time.</p>
@@ -223,13 +231,13 @@ const ProfilePage = ({ user, onLogout, onBookAppointment, onReschedule }) => {
             ) : (
               <>
                 <div className="d-flex justify-content-between align-items-center mb-3">
-                  <h6 className="mb-0">Your Appointments</h6>
+                  <h6 className="mb-0">Upcoming Appointments</h6>
                   <button className="btn btn-primary-custom" onClick={onBookAppointment}>
                     + Book New Appointment
                   </button>
                 </div>
-                <div className="d-flex flex-column gap-3">
-                  {appointments.map((appt) => (
+                <div className="d-flex flex-column gap-3 mb-4">
+                  {upcomingAppointments.map((appt) => (
                     <div className="appointment-card" key={appt.id}>
                       <div className="appt-date-block">
                         <div className="appt-month">
@@ -265,6 +273,55 @@ const ProfilePage = ({ user, onLogout, onBookAppointment, onReschedule }) => {
                 </div>
               </>
             )}
+
+            {/* ── Past Appointments ── */}
+            {pastAppointments.length > 0 && (
+              <>
+                <hr style={{ border: 'none', borderTop: '1.5px solid #e5e7eb', margin: '8px 0 20px' }} />
+                <h6 className="mb-3" style={{ color: '#6b7e8d' }}>Past Appointments</h6>
+                <div className="d-flex flex-column gap-3">
+                  {pastAppointments.map((appt) => (
+                    <div
+                      className="appointment-card"
+                      key={appt.id}
+                      style={{ opacity: 0.65 }}
+                    >
+                      <div className="appt-date-block">
+                        <div className="appt-month">
+                          {appt.appointmentDate
+                            ? new Date(appt.appointmentDate + 'T00:00:00').toLocaleString("default", { month: "short" })
+                            : '--'}
+                        </div>
+                        <div className="appt-day">
+                          {appt.appointmentDate
+                            ? new Date(appt.appointmentDate + 'T00:00:00').getDate()
+                            : '--'}
+                        </div>
+                      </div>
+                      <div className="appt-details">
+                        <div className="appt-type">{appt.specificExam || appt.examType || 'Exam'}</div>
+                        <div className="appt-meta">
+                          {appt.appointmentLocation} · {appt.flexibleTiming ? 'Flexible' : appt.appointmentTime}
+                        </div>
+                      </div>
+                      <span className={`appt-status ${appt.status?.toLowerCase()}`}>
+                        {appt.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Show book button if no appointments at all */}
+            {upcomingAppointments.length === 0 && pastAppointments.length === 0 && (
+              <div className="text-center py-2">
+                <button className="btn btn-primary-custom" onClick={onBookAppointment}>
+                  Book an Appointment
+                </button>
+              </div>
+            )}
+
           </div>
         )}
 
@@ -301,6 +358,47 @@ const ProfilePage = ({ user, onLogout, onBookAppointment, onReschedule }) => {
               <div className="col-md-6">
                 <label className="form-label">Address</label>
                 <input type="text" className="form-control custom-input" name="address" value={formData.address} onChange={handleInputChange} placeholder="Enter your address" />
+              </div>
+            </div>
+            {/* Notification Preferences */}
+            <div className="col-12">
+              <label className="form-label fw-semibold">Notification Preferences</label>
+              <p className="text-muted" style={{ fontSize: 13, marginBottom: 10 }}>
+                Choose how you'd like to be reminded about upcoming appointments.
+                Reminders will be sent the day before your appointment.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="notifyEmail"
+                    checked={formData.notifyEmail || false}
+                    onChange={e => setFormData(prev => ({ ...prev, notifyEmail: e.target.checked }))}
+                  />
+                  <label className="form-check-label" htmlFor="notifyEmail">
+                    ✉️ Email notifications — reminders sent to <strong>{formData.email || 'your email'}</strong>
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="notifySMS"
+                    checked={formData.notifySMS || false}
+                    onChange={e => setFormData(prev => ({ ...prev, notifySMS: e.target.checked }))}
+                  />
+                  <label className="form-check-label" htmlFor="notifySMS">
+                    📱 SMS notifications — reminders sent to <strong>{formData.phone || 'your phone number'}</strong>
+                  </label>
+                </div>
+                <div style={{
+                  marginTop: 4, padding: '10px 14px',
+                  background: '#fff8e1', border: '1px solid #ffe082',
+                  borderRadius: 8, fontSize: 13, color: '#7a6000'
+                }}>
+                  ⚠️ Notification sending is coming soon. Your preferences will be saved and activated automatically when this feature launches.
+                </div>
               </div>
             </div>
             <div className="d-flex gap-3 mt-4">
