@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 import { db } from '../../../firebase';
 
-// Add this helper above the component
-const formatTimeTo12Hour = (time24) => {
-  const [hourStr, minute] = time24.split(':');
-  const hour = parseInt(hourStr, 10);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const hour12 = hour % 12 || 12;
-  return `${hour12.toString().padStart(2, '0')}:${minute} ${ampm}`;
+const generateTimeSlots = (start, end) => {
+  const slots = [];
+  let current = new Date(`1970-01-01T${start}:00`);
+  const finish = new Date(`1970-01-01T${end}:00`);
+  while (current < finish) {
+    slots.push(current.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+    current.setMinutes(current.getMinutes() + 30);
+  }
+  return slots;
 };
 
 function BlockTimeSlots() {
@@ -17,8 +19,13 @@ function BlockTimeSlots() {
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-  const [newSlot, setNewSlot] = useState({ date: '', time: '', location: '', reason: '' });
-
+  const [newSlot, setNewSlot] = useState({
+    date: '',
+    startTime: '',
+    endTime: '',
+    location: '',
+    reason: ''
+  });
   useEffect(() => {
     fetchBlockedSlots();
   }, []);
@@ -36,33 +43,53 @@ function BlockTimeSlots() {
   };
 
   const handleBlock = async () => {
-    if (!newSlot.date || !newSlot.time || !newSlot.location) {
-      setErrorMsg('Please select a date, time, and location.');
+    if (!newSlot.date || !newSlot.startTime || !newSlot.endTime || !newSlot.location) {
+      setErrorMsg('Please select a date, start time, end time, and location.');
       return;
     }
+
     setSaving(true);
     setErrorMsg('');
+
     try {
-      const formattedTime = formatTimeTo12Hour(newSlot.time);  // ← convert here
-      const docRef = await addDoc(collection(db, 'blockedSlots'), {
-        date: newSlot.date,
-        time: formattedTime,                                   // ← save formatted
-        location: newSlot.location,
-        reason: newSlot.reason || 'Unavailable',
-        blockedAt: new Date().toISOString(),
+      const times = generateTimeSlots(newSlot.startTime, newSlot.endTime);
+
+      if (times.length === 0) {
+        setErrorMsg('Invalid time range.');
+        setSaving(false);
+        return;
+      }
+
+      const promises = times.map(async (time) => {
+        const docRef = await addDoc(collection(db, 'blockedSlots'), {
+          date: newSlot.date,
+          time, 
+          location: newSlot.location,
+          reason: newSlot.reason || 'Unavailable',
+          blockedAt: new Date().toISOString(),
+        });
+
+        return {
+          id: docRef.id,
+          date: newSlot.date,
+          time,
+          location: newSlot.location,
+          reason: newSlot.reason || 'Unavailable'
+        };
       });
-      setBlockedSlots(prev => [...prev, {
-        id: docRef.id,
-        ...newSlot,
-        time: formattedTime,                                   // ← update local state too
-        reason: newSlot.reason || 'Unavailable'
-      }]);
-      setNewSlot({ date: '', time: '', location: '', reason: '' });
-      setSuccessMsg('Time slot blocked successfully!');
+
+      const newEntries = await Promise.all(promises);
+
+      setBlockedSlots(prev => [...prev, ...newEntries]);
+
+      setNewSlot({ date: '', startTime: '', endTime: '', location: '', reason: '' });
+
+      setSuccessMsg('Time range blocked successfully!');
       setTimeout(() => setSuccessMsg(''), 3000);
+
     } catch (err) {
-      console.error('Error blocking slot:', err);
-      setErrorMsg('Failed to block slot. Please try again.');
+      console.error('Error blocking slots:', err);
+      setErrorMsg('Failed to block slots.');
     } finally {
       setSaving(false);
     }
@@ -88,7 +115,7 @@ function BlockTimeSlots() {
         Block a Time Slot
       </h5>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 2fr auto', gap: 12, marginBottom: 28, alignItems: 'flex-end' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 2fr auto', gap: 12, marginBottom: 28, alignItems: 'flex-end' }}>
         <div className="staff-form-group" style={{ margin: 0 }}>
           <label className="staff-label">Date</label>
           <input
@@ -99,12 +126,22 @@ function BlockTimeSlots() {
           />
         </div>
         <div className="staff-form-group" style={{ margin: 0 }}>
-          <label className="staff-label">Time</label>
+          <label className="staff-label">Start Time</label>
           <input
             type="time"
             className="staff-input"
-            value={newSlot.time}
-            onChange={e => setNewSlot({ ...newSlot, time: e.target.value })}
+            value={newSlot.startTime}
+            onChange={e => setNewSlot({ ...newSlot, startTime: e.target.value })}
+          />
+        </div>
+
+        <div className="staff-form-group" style={{ margin: 0 }}>
+          <label className="staff-label">End Time</label>
+          <input
+            type="time"
+            className="staff-input"
+            value={newSlot.endTime}
+            onChange={e => setNewSlot({ ...newSlot, endTime: e.target.value })}
           />
         </div>
         <div className="staff-form-group" style={{ margin: 0 }}>
