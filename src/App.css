@@ -49,6 +49,7 @@ body {
   border: 1.5px solid #d0dde6;
   border-radius: 9px;
   font-size: 14px;
+  padding: 11px 14px 11px 40px;
   color: #0d3d56;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -58,6 +59,7 @@ body {
 .form-group select:focus,
 .form-group textarea:focus {
   border-color: #0a6e8a;
+  
   box-shadow: 0 0 0 3px rgba(10,110,138,0.1);
 }
 
