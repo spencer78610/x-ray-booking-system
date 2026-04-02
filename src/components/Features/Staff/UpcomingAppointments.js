@@ -14,7 +14,15 @@ function UpcomingAppointments() {
         const q = query(collection(db, 'appointments'), orderBy('createdAt', 'desc'));
         const snapshot = await getDocs(q);
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setAppointments(data.filter(a => a.status !== 'Cancelled'));
+        const filtered = data.filter(a => a.status !== 'Cancelled');
+
+        filtered.sort((a, b) => {
+          const dateA = new Date(`${a.appointmentDate} ${a.appointmentTime || '00:00'}`);
+          const dateB = new Date(`${b.appointmentDate} ${b.appointmentTime || '00:00'}`);
+          return dateA - dateB; // ascending (soonest first)
+        });
+
+        setAppointments(filtered);
       } catch (err) {
         console.error('Error fetching appointments:', err);
       } finally {
@@ -24,10 +32,10 @@ function UpcomingAppointments() {
     fetchAppointments();
   }, []);
 
-  const getDate    = (a) => a.appointmentDate     || a.date     || '—';
-  const getTime    = (a) => a.appointmentTime     || a.time     || '—';
-  const getType    = (a) => a.specificExam        || a.examType || a.type || '—';
-  const getLocation= (a) => a.appointmentLocation || '—';
+  const getDate = (a) => a.appointmentDate || a.date || '—';
+  const getTime = (a) => a.appointmentTime || a.time || '—';
+  const getType = (a) => a.specificExam || a.examType || a.type || '—';
+  const getLocation = (a) => a.appointmentLocation || '—';
   const getPatient = (a) => {
     const fullName = `${a.firstName || ''} ${a.lastName || ''}`.trim();
     return fullName || a.patientName || a.email || a.uid || '—';
