@@ -17,7 +17,7 @@ const styles = `
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 48px;
+    padding: 18px;
     position: relative;
     overflow: hidden;
   }
