@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../../firebase";
 
@@ -316,59 +316,62 @@ export default function LoginPage({ onLogin, onGoToRegister }) {
   const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
+  e.preventDefault();
+  setError('');
+  setSuccess('');
 
-    if (!email || !password) {
-      setError('Please fill in all fields.');
+  if (!email || !password) {
+    setError('Please fill in all fields.');
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    // Set persistence based on remember me checkbox
+    await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
+
+    // Sign in with Firebase Auth
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    const uid = result.user.uid;
+
+    // Fetch real role from Firestore
+    const docRef = doc(db, "patients", uid);
+    const docSnap = await getDoc(docRef);
+    const userData = docSnap.exists() ? docSnap.data() : {};
+    const realRole = userData.role || role;
+
+    // Verify role matches what user selected
+    if (realRole !== role) {
+      setError(`This account is not registered as a ${role}. Please select the correct role.`);
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
+    setSuccess(`Logged in as ${realRole === 'patient' ? 'Patient' : 'Staff Member'}.`);
+    if (onLogin) onLogin({ email, role: realRole, uid });
 
-    try {
-      // Sign in with Firebase Auth
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      const uid = result.user.uid;
-
-      // Fetch real role from Firestore
-      const docRef = doc(db, "patients", uid);
-      const docSnap = await getDoc(docRef);
-      const userData = docSnap.exists() ? docSnap.data() : {};
-      const realRole = userData.role || role;
-
-      // Verify role matches what user selected
-      if (realRole !== role) {
-        setError(`This account is not registered as a ${role}. Please select the correct role.`);
-        setLoading(false);
-        return;
-      }
-
-      setSuccess(`Logged in as ${realRole === 'patient' ? 'Patient' : 'Staff Member'}.`);
-      if (onLogin) onLogin({ email, role: realRole, uid });
-
-    } catch (err) {
-      switch (err.code) {
-        case 'auth/user-not-found':
-          setError('No account found with this email.');
-          break;
-        case 'auth/wrong-password':
-          setError('Incorrect password. Please try again.');
-          break;
-        case 'auth/invalid-email':
-          setError('Please enter a valid email address.');
-          break;
-        case 'auth/too-many-requests':
-          setError('Too many failed attempts. Please try again later.');
-          break;
-        default:
-          setError('Login failed. Please check your credentials.');
-      }
-    } finally {
-      setLoading(false);
+  } catch (err) {
+    switch (err.code) {
+      case 'auth/user-not-found':
+        setError('No account found with this email.');
+        break;
+      case 'auth/wrong-password':
+        setError('Incorrect password. Please try again.');
+        break;
+      case 'auth/invalid-email':
+        setError('Please enter a valid email address.');
+        break;
+      case 'auth/too-many-requests':
+        setError('Too many failed attempts. Please try again later.');
+        break;
+      default:
+        setError('Login failed. Please check your credentials.');
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <>
