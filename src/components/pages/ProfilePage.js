@@ -1,0 +1,420 @@
+import React, { useState, useEffect } from "react";
+import { auth, db } from "../../firebase";
+import { signOut } from "firebase/auth";
+import ExamResultsTab from './ExamResultsTab';
+import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./ProfilePage.css";
+
+
+const ProfilePage = ({ user, onLogout, onBookAppointment, onReschedule }) => {
+
+  const [profile, setProfile] = useState({});
+  const [formData, setFormData] = useState({});
+  const [appointments, setAppointments] = useState([]);
+  const [activeTab, setActiveTab] = useState("info");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
+
+  const upcomingAppointments = appointments.filter(
+    a => a.status !== 'Cancelled' && a.status !== 'Completed'
+  );
+  const pastAppointments = appointments.filter(
+    a => a.status === 'Cancelled' || a.status === 'Completed'
+  );
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const docRef = doc(db, "patients", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setProfile(data);
+          setFormData(data);
+        } else {
+          const defaults = { fullName: "", email: user.email || "", phone: "", dob: "", gender: "", address: "" };
+          setProfile(defaults);
+          setFormData(defaults);
+        }
+        const apptQuery = query(
+          collection(db, "appointments"),
+          where("uid", "==", user.uid)
+        );
+        const apptSnap = await getDocs(apptQuery);
+        const appts = apptSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setAppointments(appts);
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, [user]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      if (user) {
+        const docRef = doc(db, "patients", user.uid);
+        await setDoc(docRef, formData, { merge: true })
+      }
+      setProfile(formData);
+      setActiveTab("info");
+      setSuccessMsg("Profile updated successfully!");
+      setTimeout(() => setSuccessMsg(""), 3000);
+    } catch (err) {
+      console.error("Error saving profile:", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setFormData(profile);
+    setActiveTab("info");
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      onLogout();
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  };
+
+  // Update handleReschedule:
+  const handleReschedule = (appt) => {
+    onReschedule(appt);
+  };
+
+  if (loading) {
+    return (
+      <div className="profile-loading d-flex justify-content-center align-items-center vh-100">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="profile-page">
+      {/* Header */}
+      <div className="profile-header">
+        <div className="container">
+          <div className="d-flex justify-content-between align-items-center py-4">
+            <div className="d-flex align-items-center gap-3">
+              <div className="profile-avatar">
+                {profile.fullName ? profile.fullName.charAt(0).toUpperCase() : "P"}
+              </div>
+              <div>
+                <h4 className="mb-0 profile-name">{profile.fullName || "Patient"}</h4>
+                <span className="profile-email">{user?.email || profile.email}</span>
+              </div>
+            </div>
+            <button className="btn btn-logout" onClick={handleLogout}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="me-2" viewBox="0 0 16 16">
+                <path fillRule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z" />
+                <path fillRule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z" />
+              </svg>
+              Log Out
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="container py-4">
+        {successMsg && (
+          <div className="alert alert-success" role="alert">
+            {successMsg}
+          </div>
+        )}
+
+        {/* Tabs */}
+        <ul className="nav profile-tabs mb-4">
+          <li className="nav-item">
+            <button
+              className={`nav-link ${activeTab === "info" ? "active" : ""}`}
+              onClick={() => setActiveTab("info")}
+            >
+              Personal Info
+            </button>
+          </li>
+          <li className="nav-item">
+            <button
+              className={`nav-link ${activeTab === "appointments" ? "active" : ""}`}
+              onClick={() => setActiveTab("appointments")}
+            >
+              Upcoming Appointments
+              {upcomingAppointments.length > 0 && (
+                <span className="badge ms-2">{upcomingAppointments.length}</span>
+              )}
+            </button>
+          </li>
+          <li className="nav-item">
+            <button
+              className={`nav-link ${activeTab === "edit" ? "active" : ""}`}
+              onClick={() => setActiveTab("edit")}
+            >
+              Edit Profile
+            </button>
+          </li>
+          <li className="nav-item">
+            <button
+              className={`nav-link ${activeTab === "results" ? "active" : ""}`}
+              onClick={() => setActiveTab("results")}
+            >
+              Exam Results
+            </button>
+          </li>
+        </ul>
+
+        {/* Personal Info Tab */}
+        {activeTab === "info" && (
+          <div className="profile-card">
+            <div className="row g-4">
+              {[
+                { label: "Full Name", value: profile.fullName, icon: "👤" },
+                { label: "Email", value: profile.email, icon: "✉️" },
+                { label: "Phone Number", value: profile.phone, icon: "📞" },
+                { label: "Date of Birth", value: profile.dob, icon: "🎂" },
+                { label: "Gender", value: profile.gender, icon: "⚧" },
+                { label: "Address", value: profile.address, icon: "📍" },
+              ].map(({ label, value, icon }) => (
+                <div className="col-md-6" key={label}>
+                  <div className="info-field">
+                    <span className="info-icon">{icon}</span>
+                    <div>
+                      <div className="info-label">{label}</div>
+                      <div className="info-value">{value || <span className="text-muted">Not provided</span>}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4">
+              <button className="btn btn-primary-custom" onClick={() => setActiveTab("edit")}>
+                Edit Profile
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Appointments Tab */}
+        {activeTab === "appointments" && (
+          <div className="profile-card">
+
+            {/* ── Upcoming ── */}
+            {upcomingAppointments.length === 0 ? (
+              <div className="text-center py-4">
+                <div className="empty-icon mb-3">📅</div>
+                <h5>No upcoming appointments</h5>
+                <p className="text-muted">You have no scheduled appointments at this time.</p>
+                {/* <button className="btn btn-primary-custom mt-3" onClick={onBookAppointment}>
+                  Book an Appointment
+                </button> */}
+              </div>
+            ) : (
+              <>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h6 className="mb-0">Upcoming Appointments</h6>
+                  <button className="btn btn-primary-custom" onClick={onBookAppointment}>
+                    + Book New Appointment
+                  </button>
+                </div>
+                <div className="d-flex flex-column gap-3 mb-4">
+                  {upcomingAppointments.map((appt) => (
+                    <div className="appointment-card" key={appt.id}>
+                      <div className="appt-date-block">
+                        <div className="appt-month">
+                          {appt.appointmentDate
+                            ? new Date(appt.appointmentDate + 'T00:00:00').toLocaleString("default", { month: "short" })
+                            : '--'}
+                        </div>
+                        <div className="appt-day">
+                          {appt.appointmentDate
+                            ? new Date(appt.appointmentDate + 'T00:00:00').getDate()
+                            : '--'}
+                        </div>
+                      </div>
+                      <div className="appt-details">
+                        <div className="appt-type">{appt.specificExam || appt.examType || 'Exam'}</div>
+                        <div className="appt-meta">
+                          {appt.appointmentLocation} · {appt.flexibleTiming ? 'Flexible' : appt.appointmentTime}
+                        </div>
+                      </div>
+                      <span className={`appt-status ${appt.status?.toLowerCase()}`}>
+                        {appt.status}
+                      </span>
+                      {appt.status !== 'Cancelled' && (
+                        <button
+                          className="btn-reschedule"
+                          onClick={() => handleReschedule(appt)}
+                        >
+                          Reschedule
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* ── Past Appointments ── */}
+            {pastAppointments.length > 0 && (
+              <>
+                <hr style={{ border: 'none', borderTop: '1.5px solid #e5e7eb', margin: '8px 0 20px' }} />
+                <h6 className="mb-3" style={{ color: '#6b7e8d' }}>Past Appointments</h6>
+                <div className="d-flex flex-column gap-3">
+                  {pastAppointments.map((appt) => (
+                    <div
+                      className="appointment-card"
+                      key={appt.id}
+                      style={{ opacity: 0.65 }}
+                    >
+                      <div className="appt-date-block">
+                        <div className="appt-month">
+                          {appt.appointmentDate
+                            ? new Date(appt.appointmentDate + 'T00:00:00').toLocaleString("default", { month: "short" })
+                            : '--'}
+                        </div>
+                        <div className="appt-day">
+                          {appt.appointmentDate
+                            ? new Date(appt.appointmentDate + 'T00:00:00').getDate()
+                            : '--'}
+                        </div>
+                      </div>
+                      <div className="appt-details">
+                        <div className="appt-type">{appt.specificExam || appt.examType || 'Exam'}</div>
+                        <div className="appt-meta">
+                          {appt.appointmentLocation} · {appt.flexibleTiming ? 'Flexible' : appt.appointmentTime}
+                        </div>
+                      </div>
+                      <span className={`appt-status ${appt.status?.toLowerCase()}`}>
+                        {appt.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Show book button if no appointments at all */}
+            {upcomingAppointments.length === 0 && pastAppointments.length === 0 && (
+              <div className="text-center py-2">
+                <button className="btn btn-primary-custom" onClick={onBookAppointment}>
+                  Book an Appointment
+                </button>
+              </div>
+            )}
+
+          </div>
+        )}
+
+        {/* Edit Profile Tab */}
+        {activeTab === "edit" && (
+          <div className="profile-card">
+            <div className="row g-3">
+              <div className="col-md-6">
+                <label className="form-label">Full Name</label>
+                <input type="text" className="form-control custom-input" name="fullName" value={formData.fullName} onChange={handleInputChange} placeholder="Enter your full name" />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Email</label>
+                <input type="email" className="form-control custom-input" name="email" value={formData.email} onChange={handleInputChange} placeholder="Enter your email" />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Phone Number</label>
+                <input type="tel" className="form-control custom-input" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="Enter your phone number" />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Date of Birth</label>
+                <input type="date" className="form-control custom-input" name="dob" value={formData.dob} onChange={handleInputChange} />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Gender</label>
+                <select className="form-select custom-input" name="gender" value={formData.gender} onChange={handleInputChange}>
+                  <option value="">Select gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Non-binary">Non-binary</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Address</label>
+                <input type="text" className="form-control custom-input" name="address" value={formData.address} onChange={handleInputChange} placeholder="Enter your address" />
+              </div>
+            </div>
+            {/* Notification Preferences */}
+            <div className="col-12">
+              <label className="form-label fw-semibold">Notification Preferences</label>
+              <p className="text-muted" style={{ fontSize: 13, marginBottom: 10 }}>
+                Choose how you'd like to be reminded about upcoming appointments.
+                Reminders will be sent the day before your appointment.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="notifyEmail"
+                    checked={formData.notifyEmail || false}
+                    onChange={e => setFormData(prev => ({ ...prev, notifyEmail: e.target.checked }))}
+                  />
+                  <label className="form-check-label" htmlFor="notifyEmail">
+                    ✉️ Email notifications — reminders sent to <strong>{formData.email || 'your email'}</strong>
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="notifySMS"
+                    checked={formData.notifySMS || false}
+                    onChange={e => setFormData(prev => ({ ...prev, notifySMS: e.target.checked }))}
+                  />
+                  <label className="form-check-label" htmlFor="notifySMS">
+                    📱 SMS notifications — reminders sent to <strong>{formData.phone || 'your phone number'}</strong>
+                  </label>
+                </div>
+                <div style={{
+                  marginTop: 4, padding: '10px 14px',
+                  background: '#fff8e1', border: '1px solid #ffe082',
+                  borderRadius: 8, fontSize: 13, color: '#7a6000'
+                }}>
+                  ⚠️ Notification sending is coming soon. Your preferences will be saved and activated automatically when this feature launches.
+                </div>
+              </div>
+            </div>
+            <div className="d-flex gap-3 mt-4">
+              <button className="btn btn-primary-custom" onClick={handleSave} disabled={saving}>
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
+              <button className="btn btn-outline-secondary" onClick={handleCancel}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+        {activeTab === "results" && <ExamResultsTab user={user} />}
+      </div>
+    </div>
+  );
+};
+
+export default ProfilePage;

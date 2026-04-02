@@ -1,22 +1,23 @@
 
 
-export default function ExamDetails({ formData, handleChange}) {
+export default function ExamDetails({ formData, handleChange, errors}) {
 
   return (
     <div className="form-grid booking-form">
       <div className="form-group">
         <label>Exam Type</label>
-        <select name="examType" value={formData.examType} onChange={handleChange}>
+        <select name="examType" value={formData.examType} onChange={handleChange} className={errors.examType ? 'error' : ''}>
           <option value="">Select exam type</option>
           <option value="x-ray">X-ray</option>
           <option value="ultrasound">Ultrasound</option>
           <option value="mammography">Mammography</option>
         </select>
+        {errors.examType && <span className="error-text">{errors.examType}</span>}
       </div>
 
       <div className="form-group">
         <label>Specific Exam</label>
-        <select name="specificExam" value={formData.specificExam} onChange={handleChange}>
+        <select name="specificExam" value={formData.specificExam} onChange={handleChange} className={errors.specificExam ? 'error' : ''}>
           <option value="">Select specific exam</option>
           {formData.examType === 'x-ray' && (
             <>
@@ -32,6 +33,7 @@ export default function ExamDetails({ formData, handleChange}) {
             </>
           )}
         </select>
+        {errors.specificExam && <span className="error-text">{errors.specificExam}</span>}
       </div>
 
       <div className="form-group">

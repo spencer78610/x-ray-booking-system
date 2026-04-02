@@ -1,5 +1,7 @@
-
 import React, { useState } from 'react';
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../../firebase";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@500&display=swap');
@@ -69,9 +71,7 @@ const styles = `
     letter-spacing: 0.3px;
   }
 
-  .panel-body {
-    z-index: 1;
-  }
+  .panel-body { z-index: 1; }
 
   .panel-heading {
     font-family: 'Playfair Display', serif;
@@ -162,9 +162,7 @@ const styles = `
     z-index: 1;
   }
 
-  .role-toggle-btn.active {
-    color: #0d3d56;
-  }
+  .role-toggle-btn.active { color: #0d3d56; }
 
   .role-toggle-slider {
     position: absolute;
@@ -177,13 +175,9 @@ const styles = `
     transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
   }
 
-  .role-toggle-slider.staff {
-    transform: translateX(calc(100% + 8px));
-  }
+  .role-toggle-slider.staff { transform: translateX(calc(100% + 8px)); }
 
-  .form-group {
-    margin-bottom: 18px;
-  }
+  .form-group { margin-bottom: 18px; }
 
   .form-label {
     display: block;
@@ -193,9 +187,7 @@ const styles = `
     margin-bottom: 6px;
   }
 
-  .form-input-wrap {
-    position: relative;
-  }
+  .form-input-wrap { position: relative; }
 
   .form-input-icon {
     position: absolute;
@@ -226,9 +218,7 @@ const styles = `
     box-shadow: 0 0 0 3px rgba(10,110,138,0.1);
   }
 
-  .form-input::placeholder {
-    color: #aabbc7;
-  }
+  .form-input::placeholder { color: #aabbc7; }
 
   .form-row {
     display: flex;
@@ -259,9 +249,7 @@ const styles = `
     font-weight: 500;
   }
 
-  .form-forgot:hover {
-    text-decoration: underline;
-  }
+  .form-forgot:hover { text-decoration: underline; }
 
   .login-btn {
     width: 100%;
@@ -304,7 +292,7 @@ const styles = `
 
   .login-divider {
     text-align: center;
-    font-size: 12px;
+    font-size: 13px;
     color: #9bb0be;
     margin: 20px 0 0;
   }
@@ -318,7 +306,7 @@ const styles = `
   }
 `;
 
-export default function LoginPage({ onLogin }) {
+export default function LoginPage({ onLogin, onGoToRegister }) {
   const [role, setRole] = useState('patient');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -339,23 +327,57 @@ export default function LoginPage({ onLogin }) {
 
     setLoading(true);
 
-    // TODO: Replace with your real auth API call
-    setTimeout(() => {
+    try {
+      // Sign in with Firebase Auth
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      const uid = result.user.uid;
+
+      // Fetch real role from Firestore
+      const docRef = doc(db, "patients", uid);
+      const docSnap = await getDoc(docRef);
+      const userData = docSnap.exists() ? docSnap.data() : {};
+      const realRole = userData.role || role;
+
+      // Verify role matches what user selected
+      if (realRole !== role) {
+        setError(`This account is not registered as a ${role}. Please select the correct role.`);
+        setLoading(false);
+        return;
+      }
+
+      setSuccess(`Logged in as ${realRole === 'patient' ? 'Patient' : 'Staff Member'}.`);
+      if (onLogin) onLogin({ email, role: realRole, uid });
+
+    } catch (err) {
+      switch (err.code) {
+        case 'auth/user-not-found':
+          setError('No account found with this email.');
+          break;
+        case 'auth/wrong-password':
+          setError('Incorrect password. Please try again.');
+          break;
+        case 'auth/invalid-email':
+          setError('Please enter a valid email address.');
+          break;
+        case 'auth/too-many-requests':
+          setError('Too many failed attempts. Please try again later.');
+          break;
+        default:
+          setError('Login failed. Please check your credentials.');
+      }
+    } finally {
       setLoading(false);
-      setSuccess(`Logged in as ${role === 'patient' ? 'Patient' : 'Staff Member'}.`);
-      if (onLogin) onLogin({ email, role });
-    }, 1200);
+    }
   };
 
   return (
     <>
       <style>{styles}</style>
       <div className="login-root">
-
         <div className="login-panel">
           <div className="panel-logo">
             <div className="panel-logo-icon">🩻</div>
-            <span className="panel-logo-text">XRAY Portal</span>
+            <span className="panel-logo-text">London X-Ray</span>
           </div>
           <div className="panel-body">
             <h1 className="panel-heading">Your health,<br />your access.</h1>
@@ -370,6 +392,27 @@ export default function LoginPage({ onLogin }) {
 
         <div className="login-form-side">
           <div className="login-card">
+
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
+              <button
+                type="button"
+                onClick={onGoToRegister}
+                style={{
+                  background: "transparent",
+                  border: "1.5px solid #0a6e8a",
+                  color: "#0a6e8a",
+                  borderRadius: "8px",
+                  padding: "7px 16px",
+                  fontSize: "13px",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Create Account
+              </button>
+            </div>
+
             <h2 className="login-card-title">Welcome back</h2>
             <p className="login-card-sub">Sign in to continue to your portal</p>
 
@@ -398,7 +441,7 @@ export default function LoginPage({ onLogin }) {
               <div className="form-group">
                 <label className="form-label">Email address</label>
                 <div className="form-input-wrap">
-                  <span className="form-input-icon">✉</span>
+                  <span className="form-input-icon"> ✉</span>
                   <input
                     className="form-input"
                     type="email"
@@ -444,12 +487,11 @@ export default function LoginPage({ onLogin }) {
 
             <p className="login-divider">
               {role === 'patient'
-                ? 'New patient? Contact reception to register your account.'
+                ? 'New patient? Click "Create Account" to register.'
                 : 'Staff access issues? Contact your IT administrator.'}
             </p>
           </div>
         </div>
-
       </div>
     </>
   );

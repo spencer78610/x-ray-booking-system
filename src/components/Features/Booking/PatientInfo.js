@@ -1,5 +1,5 @@
 
-export default function PatientInfo({ formData, handleChange }) {
+export default function PatientInfo({ formData, handleChange, errors }) {
 
   return (
     <div className="form-grid booking-form">
@@ -10,7 +10,9 @@ export default function PatientInfo({ formData, handleChange }) {
           name="firstName"
           value={formData.firstName}
           onChange={handleChange}
+          className={errors.firstName ? 'error' : ''}
         />
+        {errors.firstName && <p className="error-text">{errors.firstName}</p>}
       </div>
 
       <div className="form-group">
@@ -20,7 +22,9 @@ export default function PatientInfo({ formData, handleChange }) {
           name="lastName"
           value={formData.lastName}
           onChange={handleChange}
+          className={errors.lastName ? 'error' : ''}
         />
+        {errors.lastName && <p className="error-text">{errors.lastName}</p>}
       </div>
 
       <div className="form-group">
@@ -30,13 +34,15 @@ export default function PatientInfo({ formData, handleChange }) {
           name="dob"
           value={formData.dob}
           onChange={handleChange}
+          className={errors.dob ? 'error' : ''}
         />
+        {errors.dob && <p className="error-text">{errors.dob}</p>}
       </div>
 
       {/* Biological Sex */}
       <div className="form-group">
         <label>Biological Sex</label>
-        <div className="radio-group">
+        <div className={`radio-group ${errors.biologicalSex ? 'error' : ''}`}>
           <label>
             <input
               type="radio"
@@ -69,7 +75,9 @@ export default function PatientInfo({ formData, handleChange }) {
             />
             Prefer not to say
           </label>
+
         </div>
+        {errors.biologicalSex && <p className="error-text">{errors.biologicalSex}</p>}
       </div>
 
       <div className="form-group">
@@ -79,7 +87,9 @@ export default function PatientInfo({ formData, handleChange }) {
           name="phoneNumber"
           value={formData.phoneNumber}
           onChange={handleChange}
+          className={errors.phoneNumber ? 'error' : ''}
         />
+        {errors.phoneNumber && <p className="error-text">{errors.phoneNumber}</p>}
       </div>
 
       <div className="form-group">
@@ -89,7 +99,9 @@ export default function PatientInfo({ formData, handleChange }) {
           name="email"
           value={formData.email}
           onChange={handleChange}
+          className={errors.email ? 'error' : ''}
         />
+        {errors.email && <p className="error-text">{errors.email}</p>}
       </div>
 
       <div className="form-group full-width">
@@ -99,7 +111,9 @@ export default function PatientInfo({ formData, handleChange }) {
           name="address"
           value={formData.address}
           onChange={handleChange}
+          className={errors.address ? 'error' : ''}
         />
+        {errors.address && <p className="error-text">{errors.address}</p>}
       </div>
     </div>
   )
