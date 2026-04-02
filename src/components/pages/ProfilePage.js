@@ -224,9 +224,9 @@ const ProfilePage = ({ user, onLogout, onBookAppointment, onReschedule }) => {
                 <div className="empty-icon mb-3">📅</div>
                 <h5>No upcoming appointments</h5>
                 <p className="text-muted">You have no scheduled appointments at this time.</p>
-                <button className="btn btn-primary-custom mt-3" onClick={onBookAppointment}>
+                {/* <button className="btn btn-primary-custom mt-3" onClick={onBookAppointment}>
                   Book an Appointment
-                </button>
+                </button> */}
               </div>
             ) : (
               <>
