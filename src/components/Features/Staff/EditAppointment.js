@@ -9,6 +9,7 @@ function EditAppointment() {
   const [editData, setEditData] = useState({});
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const [showCancelled, setShowCancelled] = useState(false);
 
   useEffect(() => {
     fetchAppointments();
@@ -27,25 +28,21 @@ function EditAppointment() {
     }
   };
 
-  // Helper to read either field name convention
-  const getDate = (appt) => appt.appointmentDate || appt.date || '';
-  const getTime = (appt) => appt.appointmentTime || appt.time || '';
-  // const getType = (appt) => appt.specificExam || appt.examType || appt.type || '—';
-  const getPatient = (appt) => {
-    const firstName = appt.firstName || '';
-    const lastName = appt.lastName || '';
-    const fullName = `${firstName} ${lastName}`.trim();
+  const getDate     = (appt) => appt.appointmentDate     || appt.date        || '';
+  const getTime     = (appt) => appt.appointmentTime     || appt.time        || '';
+  const getLocation = (appt) => appt.appointmentLocation || '';
+  const getPatient  = (appt) => {
+    const fullName = `${appt.firstName || ''} ${appt.lastName || ''}`.trim();
     return fullName || appt.patientName || appt.email || appt.uid || '—';
   };
-   const getLocation = (appt) => appt.appointmentLocation || '';
 
   const handleEdit = (appt) => {
     setEditingId(appt.id);
     setEditData({
-      appointmentDate: getDate(appt),
-      appointmentTime: getTime(appt),
+      appointmentDate:     getDate(appt),
+      appointmentTime:     getTime(appt),
       appointmentLocation: getLocation(appt),
-      status: appt.status || 'Confirmed',
+      status:              appt.status || 'Confirmed',
     });
   };
 
@@ -53,16 +50,13 @@ function EditAppointment() {
     setSaving(true);
     try {
       const apptRef = doc(db, 'appointments', id);
-      // Write using the correct field names and also update legacy fields
-      // so staff-booked appointments stay consistent too
       await updateDoc(apptRef, {
-        appointmentDate: editData.appointmentDate,
-        appointmentTime: editData.appointmentTime,
+        appointmentDate:     editData.appointmentDate,
+        appointmentTime:     editData.appointmentTime,
         appointmentLocation: editData.appointmentLocation,
-        status: editData.status,
-        // Keep legacy fields in sync for staff-booked appointments
-        date: editData.appointmentDate,
-        time: editData.appointmentTime,
+        status:              editData.status,
+        date:                editData.appointmentDate,
+        time:                editData.appointmentTime,
       });
       setAppointments(prev =>
         prev.map(appt => appt.id === id ? { ...appt, ...editData } : appt)
@@ -92,6 +86,10 @@ function EditAppointment() {
     );
   }
 
+  const visibleAppointments = showCancelled
+    ? appointments
+    : appointments.filter(a => a.status !== 'Cancelled');
+
   if (appointments.length === 0) {
     return (
       <div className="staff-card">
@@ -107,91 +105,104 @@ function EditAppointment() {
   return (
     <div className="staff-card">
       {successMsg && <div className="staff-alert-success">✅ {successMsg}</div>}
-      <table className="staff-table">
-        <thead>
-          <tr>
-            <th>Patient</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Location</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {appointments.map((appt) => (
-            <tr key={appt.id}>
-              {editingId === appt.id ? (
-                <>
-                  <td>{getPatient(appt)}</td>
-                  <td>
-                    <input
-                      type="date"
-                      className="staff-input"
-                      value={editData.appointmentDate}
-                      onChange={e => setEditData({ ...editData, appointmentDate: e.target.value })}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="time"
-                      className="staff-input"
-                      value={editData.appointmentTime}
-                      onChange={e => setEditData({ ...editData, appointmentTime: e.target.value })}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      className="staff-input"
-                      value={editData.appointmentLocation}
-                      onChange={e => setEditData({ ...editData, appointmentLocation: e.target.value })}
-                      placeholder="Location"
-                    />
-                  </td>
-                  <td>
-                    <select
-                      className="staff-input"
-                      value={editData.status}
-                      onChange={e => setEditData({ ...editData, status: e.target.value })}
-                    >
-                      <option value="Confirmed">Confirmed</option>
-                      <option value="Pending">Pending</option>
-                      <option value="Cancelled">Cancelled</option>
-                      <option value="Completed">Completed</option>
-                    </select>
-                  </td>
-                  <td style={{ display: 'flex', gap: 8 }}>
-                    <button className="staff-btn" onClick={() => handleSave(appt.id)} disabled={saving}>
-                      {saving ? 'Saving...' : 'Save'}
-                    </button>
-                    <button className="staff-btn-outline" onClick={handleCancel}>
-                      Cancel
-                    </button>
-                  </td>
-                </>
-              ) : (
-                <>
-                  <td>{getPatient(appt)}</td>
-                  <td>{getDate(appt)}</td>
-                  <td>{getTime(appt)}</td>
-                  <td>{getLocation(appt) || '—'}</td>
-                  <td>
-                    <span className={`badge badge-${appt.status?.toLowerCase() || 'pending'}`}>
-                      {appt.status || 'Pending'}
-                    </span>
-                  </td>
-                  <td>
-                    <button className="staff-btn-outline" onClick={() => handleEdit(appt)}>
-                      Edit
-                    </button>
-                  </td>
-                </>
-              )}
+
+      {/* Toggle */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+        <button
+          className={showCancelled ? 'staff-btn' : 'staff-btn-outline'}
+          onClick={() => setShowCancelled(prev => !prev)}
+        >
+          {showCancelled ? 'Hide Cancelled' : 'Show Cancelled'}
+        </button>
+      </div>
+
+      {visibleAppointments.length === 0 ? (
+        <div className="staff-empty">
+          <div className="staff-empty-icon">✅</div>
+          <h5>No active appointments</h5>
+          <p>All appointments have been cancelled. Toggle to show them.</p>
+        </div>
+      ) : (
+        <table className="staff-table">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Location</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {visibleAppointments.map((appt) => (
+              <tr
+                key={appt.id}
+                style={{
+                  opacity: appt.status === 'Cancelled' ? 0.5 : 1,
+                  background: appt.status === 'Cancelled' ? '#fafafa' : 'transparent',
+                }}
+              >
+                {editingId === appt.id ? (
+                  <>
+                    <td>{getPatient(appt)}</td>
+                    <td>
+                      <input type="date" className="staff-input"
+                        value={editData.appointmentDate}
+                        onChange={e => setEditData({ ...editData, appointmentDate: e.target.value })} />
+                    </td>
+                    <td>
+                      <input type="time" className="staff-input"
+                        value={editData.appointmentTime}
+                        onChange={e => setEditData({ ...editData, appointmentTime: e.target.value })} />
+                    </td>
+                    <td>
+                      <input type="text" className="staff-input"
+                        value={editData.appointmentLocation}
+                        onChange={e => setEditData({ ...editData, appointmentLocation: e.target.value })}
+                        placeholder="Location" />
+                    </td>
+                    <td>
+                      <select className="staff-input" value={editData.status}
+                        onChange={e => setEditData({ ...editData, status: e.target.value })}>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Cancelled">Cancelled</option>
+                        <option value="Completed">Completed</option>
+                      </select>
+                    </td>
+                    <td style={{ display: 'flex', gap: 8 }}>
+                      <button className="staff-btn" onClick={() => handleSave(appt.id)} disabled={saving}>
+                        {saving ? 'Saving...' : 'Save'}
+                      </button>
+                      <button className="staff-btn-outline" onClick={handleCancel}>Cancel</button>
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td>{getPatient(appt)}</td>
+                    <td>{getDate(appt)}</td>
+                    <td>{getTime(appt)}</td>
+                    <td>{getLocation(appt) || '—'}</td>
+                    <td>
+                      <span className={`badge badge-${appt.status?.toLowerCase() || 'pending'}`}>
+                        {appt.status || 'Pending'}
+                      </span>
+                    </td>
+                    <td>
+                      {appt.status !== 'Cancelled' && (
+                        <button className="staff-btn-outline" onClick={() => handleEdit(appt)}>
+                          Edit
+                        </button>
+                      )}
+                    </td>
+                  </>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

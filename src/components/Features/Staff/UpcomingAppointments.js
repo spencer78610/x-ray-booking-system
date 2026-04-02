@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../../../firebase';
+import AppointmentModal from './AppointmentModal';
 
 function UpcomingAppointments() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedAppt, setSelectedAppt] = useState(null);
 
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        // Order by createdAt since appointmentDate and date are different fields
         const q = query(collection(db, 'appointments'), orderBy('createdAt', 'desc'));
         const snapshot = await getDocs(q);
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        // Filter out cancelled, show upcoming only
-        const upcoming = data.filter(a => a.status !== 'Cancelled');
-        setAppointments(upcoming);
+        setAppointments(data.filter(a => a.status !== 'Cancelled'));
       } catch (err) {
         console.error('Error fetching appointments:', err);
       } finally {
@@ -25,17 +24,14 @@ function UpcomingAppointments() {
     fetchAppointments();
   }, []);
 
-  // Helper to read either field name convention
-  const getDate = (appt) => appt.appointmentDate || appt.date || '—';
-  const getTime = (appt) => appt.appointmentTime || appt.time || '—';
-  const getType = (appt) => appt.specificExam || appt.examType || appt.type || '—';
-  const getPatient = (appt) => {
-    const firstName = appt.firstName || '';
-    const lastName = appt.lastName || '';
-    const fullName = `${firstName} ${lastName}`.trim();
-    return fullName || appt.patientName || appt.email || appt.uid || '—';
+  const getDate    = (a) => a.appointmentDate     || a.date     || '—';
+  const getTime    = (a) => a.appointmentTime     || a.time     || '—';
+  const getType    = (a) => a.specificExam        || a.examType || a.type || '—';
+  const getLocation= (a) => a.appointmentLocation || '—';
+  const getPatient = (a) => {
+    const fullName = `${a.firstName || ''} ${a.lastName || ''}`.trim();
+    return fullName || a.patientName || a.email || a.uid || '—';
   };
-  const getLocation = (appt) => appt.appointmentLocation || '—';
 
   if (loading) {
     return (
@@ -60,36 +56,54 @@ function UpcomingAppointments() {
   }
 
   return (
-    <div className="staff-card">
-      <table className="staff-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Patient</th>
-            <th>Exam Type</th>
-            <th>Location</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {appointments.map((appt) => (
-            <tr key={appt.id}>
-              <td>{getDate(appt)}</td>
-              <td>{getTime(appt)}</td>
-              <td>{getPatient(appt)}</td>
-              <td>{getType(appt)}</td>
-              <td>{getLocation(appt)}</td>
-              <td>
-                <span className={`badge badge-${appt.status?.toLowerCase() || 'pending'}`}>
-                  {appt.status || 'Pending'}
-                </span>
-              </td>
+    <>
+      {selectedAppt && (
+        <AppointmentModal
+          appt={selectedAppt}
+          onClose={() => setSelectedAppt(null)}
+        />
+      )}
+
+      <div className="staff-card">
+        <table className="staff-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Patient</th>
+              <th>Exam Type</th>
+              <th>Location</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {appointments.map((appt) => (
+              <tr key={appt.id}>
+                <td>{getDate(appt)}</td>
+                <td>{getTime(appt)}</td>
+                <td>{getPatient(appt)}</td>
+                <td>{getType(appt)}</td>
+                <td>{getLocation(appt)}</td>
+                <td>
+                  <span className={`badge badge-${appt.status?.toLowerCase() || 'pending'}`}>
+                    {appt.status || 'Pending'}
+                  </span>
+                </td>
+                <td>
+                  <button
+                    className="staff-btn"
+                    onClick={() => setSelectedAppt(appt)}
+                  >
+                    View Details
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 
