@@ -12,6 +12,7 @@ body {
 .booking-form {
   background: white;
   padding: 32px;
+  border-radius: 14px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
@@ -44,9 +45,20 @@ body {
 .form-group input,
 .form-group select,
 .form-group textarea {
-  padding: 10px;
-  border: 1px solid #ccc;
-    padding: 11px 14px 11px 40px;
+  padding: 11px 14px;
+  border: 1.5px solid #d0dde6;
+  border-radius: 9px;
+  font-size: 14px;
+  color: #0d3d56;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #0a6e8a;
+  box-shadow: 0 0 0 3px rgba(10,110,138,0.1);
 }
 
 .form-group textarea {
@@ -56,7 +68,6 @@ body {
 .full-width {
   grid-column: span 2;
 }
-
 
 .radio-group {
   display: flex;
@@ -75,7 +86,7 @@ body {
   color: #b91c1c;
   background: #fee2e2;
   padding: 12px;
-  border-radius: 6px;
+  border-radius: 9px;
   font-weight: 500;
 }
 
@@ -98,80 +109,88 @@ body {
   margin-top: 30px;
 }
 
+/* Next / Submit button */
 .submit-btn {
   width: 25%;
-  padding: 14px;
-  font-size: 1rem;
-  font-weight: bold;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
   border: none;
-  background: #3a87ad;
+  border-radius: 10px;
+  background: linear-gradient(160deg, #0d3d56 0%, #0a6e8a 60%, #0fa3b1 100%);
   color: white;
   cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
 }
 
+.submit-btn:hover { opacity: 0.92; }
+.submit-btn:active { transform: scale(0.99); }
+
+/* Back button */
 .secondary-btn {
   width: 25%;
-  padding: 14px;
-  font-size: 1rem;
-  font-weight: bold;
-  border: none;
-  background: #eb3525;
-  color: white;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1.5px solid #0a6e8a;
+  border-radius: 10px;
+  background: transparent;
+  color: #0a6e8a;
   cursor: pointer;
-}
-
-.submit-btn:hover {
-  background: #005885;
+  transition: all 0.2s;
 }
 
 .secondary-btn:hover {
-  background: #c53030;
+  background: #0a6e8a;
+  color: white;
 }
+
+/* Cancel/Reschedule button */
 .cR-btn {
   width: 25%;
-  padding: 14px;
-  font-size: 1rem;
-  font-weight: bold;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
   border: none;
-  background: #3a87ad;
+  border-radius: 10px;
+  background: linear-gradient(160deg, #0d3d56 0%, #0a6e8a 60%, #0fa3b1 100%);
   color: white;
   cursor: pointer;
   margin-top: 30px;
+  transition: opacity 0.2s;
 }
 
-.cR-btn :hover {
-  background: #005885;
-}
+.cR-btn:hover { opacity: 0.92; }
 
 .cancel-btn {
   width: 25%;
-  padding: 14px;
-  font-size: 1rem;
-  font-weight: bold;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
   border: none;
-  background: #eb3525;
+  border-radius: 10px;
+  background: #ef4444;
   color: white;
   cursor: pointer;
+  transition: opacity 0.2s;
 }
+
+.cancel-btn:hover { opacity: 0.88; }
 
 .reschedule-btn {
   width: 25%;
-  padding: 14px;
-  font-size: 1rem;
-  font-weight: bold;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
   border: none;
-  background: #3a87ad;
+  border-radius: 10px;
+  background: linear-gradient(160deg, #0d3d56 0%, #0a6e8a 60%, #0fa3b1 100%);
   color: white;
   cursor: pointer;
+  transition: opacity 0.2s;
 }
 
-.cancel-btn:hover {
-  background: #c53030;
-}
-
-.reschedule-btn:hover {
-  background: #005885;
-}
+.reschedule-btn:hover { opacity: 0.92; }
 
 .progress-container {
   width: 100%;
@@ -184,7 +203,7 @@ body {
 
 .progress-bar {
   height: 100%;
-  background-color: #005885;
+  background: linear-gradient(160deg, #0d3d56 0%, #0a6e8a 60%, #0fa3b1 100%);
   width: 0%;
   transition: width 0.5s ease-in-out;
   border-radius: 5px;
@@ -197,7 +216,7 @@ body {
 
 .breadcrumbs .active-step {
   font-weight: bold;
-  color: #005885;
+  color: #0a6e8a;
 }
 
 .time-slots {
@@ -209,19 +228,22 @@ body {
 
 .time-slot {
   padding: 25px 50px;
-  border: 1px solid #ccc;
+  border: 1.5px solid #d0dde6;
+  border-radius: 9px;
   background: white;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
 .time-slot:hover {
-  background: #e6f4ff;
+  background: #e8f0fb;
+  border-color: #0a6e8a;
 }
 
 .time-slot.selected {
-  background: #2563eb;
+  background: linear-gradient(160deg, #0d3d56 0%, #0a6e8a 60%, #0fa3b1 100%);
   color: white;
-  border-color: #2563eb;
+  border-color: #0a6e8a;
 }
 
 .booked {
@@ -252,8 +274,20 @@ body {
 .booked::after {
   transform: translate(-50%, -50%) rotate(-23deg);
 }
+.link-button {
+  background: none;
+  border: none;
+  border-bottom: 1.5px solid #0a6e8a;
+  color: #0a6e8a;
+  font-size: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 0 1px 0;
+  font-family: inherit;
+  text-decoration: none;
+}
 
-.time-slot.selected {
-  background: #2563eb;
-  color: white;
+.link-button:hover {
+  color: #0d3d56;
+  border-bottom-color: #0d3d56;
 }
